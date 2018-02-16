@@ -9,12 +9,12 @@ type ecdTableEntry struct {
 	auxillary uint
 }
 
-const prime uint = 0x11b
-
+// Add 2 items
 func Add(a, b uint) uint {
 	return a ^ b
 }
 
+// Subtract 2 items
 func Subtract(a, b uint) uint {
 	return a ^ b
 }
@@ -35,8 +35,9 @@ func Subtract(a, b uint) uint {
 // 	return p
 // }
 
+// Multiply 2 numbers reduced by a polynomial
 func Multiply(a, b, poly uint) uint {
-	var z uint = 0
+	var z uint
 	for a > 0 {
 		if a&1 == 1 {
 			z ^= b
@@ -50,10 +51,11 @@ func Multiply(a, b, poly uint) uint {
 	return z
 }
 
+// DividePolynomials divides 2 polynomials using polynomial binary long division
 func DividePolynomials(dividend, divisor uint) (uint, uint) {
-	var quotient uint = 0
-	var remainder uint = 0
-	var dividendIndex uint = 0
+	var quotient uint
+	var remainder uint
+	var dividendIndex uint
 	minDivisorPower := math.Floor(math.Log2(float64(divisor)))
 	minDivisorValue := uint(math.Pow(2, minDivisorPower))
 	maxDividendPower := uint(math.Ceil(math.Log2(float64(dividend + 1))))
@@ -67,16 +69,17 @@ func DividePolynomials(dividend, divisor uint) (uint, uint) {
 				remainder = remainder << 1
 			}
 			quotient <<= 1
-			dividendIndex += 1
+			dividendIndex++
 			if remainder >= minDivisorValue {
 				remainder = remainder ^ divisor
-				quotient += 1
+				quotient++
 			}
 		}
 	}
 	return quotient, remainder
 }
 
+// Inverse gets the inverse of a number given a polynomial
 func Inverse(a, p uint) uint {
 	n := 2
 	quotientAuxillary := []ecdTableEntry{ecdTableEntry{0, 0}, ecdTableEntry{0, 1}}
@@ -84,7 +87,7 @@ func Inverse(a, p uint) uint {
 	dividend := p
 	divisor := a
 	var newAux uint = 1
-	var quotient uint = 0
+	var quotient uint
 
 	for remainder != 1 {
 		quotient, remainder = DividePolynomials(dividend, divisor)
@@ -95,7 +98,7 @@ func Inverse(a, p uint) uint {
 		quotientAuxillary = append(quotientAuxillary, ecdTableEntry{quotient, newAux})
 		dividend = divisor
 		divisor = remainder
-		n += 1
+		n++
 	}
 	return newAux
 }

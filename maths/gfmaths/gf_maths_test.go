@@ -74,8 +74,10 @@ func TestDividePolynomials(tester *testing.T) {
 	if 1 != remainder {
 		tester.Error()
 	}
+}
 
-	quotient, remainder = DividePolynomials(0x11b, 83)
+func TestDividePolynomialsTwo(tester *testing.T) {
+	quotient, remainder := DividePolynomials(0x11b, 83)
 	if 5 != quotient {
 		tester.Error()
 	}
@@ -141,5 +143,11 @@ func TestInverseTwo(tester *testing.T) {
 	inverse = Inverse(b, p)
 	if inverse != a {
 		tester.Error()
+	}
+}
+
+func TestInverseOfOne(tester *testing.T) {
+	if Inverse(1, 0x11b) != 1 {
+		tester.Error("inverse of 1 should be 1")
 	}
 }
