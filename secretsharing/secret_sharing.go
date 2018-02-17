@@ -1,8 +1,9 @@
 package secretsharing
 
 import (
-	"../maths"
 	"log"
+
+	"../maths"
 )
 
 type tuple struct {
@@ -12,6 +13,9 @@ type tuple struct {
 
 //CreateShares creates shares based off a given secret
 func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
+	if n < k {
+		log.Fatalf("n must be greater than k, secret would be unrecoverable")
+	}
 	secretLen := len(secret)
 	values := make([][]byte, n)
 	for i := range values {
@@ -43,7 +47,7 @@ func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 func RecoverSecret(xValues []uint, yValues [][]byte) []byte {
 	numberOfShares := len(yValues)
 	if numberOfShares < 2 {
-		log.Fatal("need at least two shares")
+		log.Fatal("need at least two shares to recover a secret")
 	}
 	// sharesBytes = list(map(lambda x: (x[0], binascii.unhexlify(x[1])), shares))
 	secretLength := len(yValues[0])
