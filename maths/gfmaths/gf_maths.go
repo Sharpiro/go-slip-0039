@@ -19,22 +19,6 @@ func Subtract(a, b uint) uint {
 	return a ^ b
 }
 
-// func Multiply(a, b, prime uint) uint {
-// 	var p uint = 0
-// 	for a > 0 && b > 0 {
-// 		if b&1 == 1 {
-// 			p = p ^ a
-// 		}
-// 		if a&0x80 >= 128 {
-// 			a = (a << 1) ^ prime
-// 		} else {
-// 			a <<= 1
-// 		}
-// 		b >>= 1
-// 	}
-// 	return p
-// }
-
 // Multiply 2 numbers reduced by a polynomial
 func Multiply(a, b, poly uint) uint {
 	var z uint

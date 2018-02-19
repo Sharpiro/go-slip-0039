@@ -1,9 +1,10 @@
 package maths
 
 import (
-	gfArith "./gfmaths"
 	"crypto/rand"
 	"log"
+
+	gfArith "./gfmaths"
 )
 
 const prime uint = 0x11b

@@ -8,6 +8,8 @@ import (
 	mathRandom "math/rand"
 	"testing"
 	"time"
+
+	"../cryptos"
 )
 
 var _tester *testing.T
@@ -30,12 +32,26 @@ func TestSecretSharing(tester *testing.T) {
 	}
 }
 
-// func TestgetRandomSlices(tester *testing.T) {
-// 	mathRandom.Seed(time.Now().UTC().UnixNano())
-// 	data := []uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-// 	randomSlice := getRandomSlices(data, 10)
-// 	fmt.Println(randomSlice)
-// }
+func Test256BitShare(tester *testing.T) {
+	secretBytes := make([]byte, 32, 32)
+	mathRandom.Read(secretBytes)
+	xValues, yValues := CreateShares(6, 3, secretBytes)
+	fXValues := createFormattedShare(xValues, yValues)
+	fmt.Println(fXValues[0])
+	fmt.Println(len(fXValues[0]))
+}
+
+func TestGetChecksummedSecret(tester *testing.T) {
+	data := []byte("data")
+	hash := cryptos.GetSha256(data)[:2]
+	css := getChecksummedSecret(data)
+	if !bytes.Equal(data, css[:4]) {
+		tester.Error()
+	}
+	if !bytes.Equal(hash, css[4:]) {
+		tester.Error()
+	}
+}
 
 func getRandomSlices(xValues []uint, yValues [][]byte, k uint) ([]uint, [][]byte) {
 	tracker := make(map[int]bool, k)

@@ -1,8 +1,9 @@
 package maths
 
 import (
-	gfArith "./gfmaths"
 	"testing"
+
+	gfArith "./gfmaths"
 )
 
 func TestGetPolynomialDegree(tester *testing.T) {
@@ -22,7 +23,8 @@ func TestCreateRandomPolynomial(tester *testing.T) {
 }
 
 func TestEvaluatePolynomial(tester *testing.T) {
-	polynomial := []uint{1234, 166, 94}
+	bytePolynomial := []byte{123, 166, 94}
+	polynomial := []uint{123, 166, 94}
 	var prime uint = 0x11b
 
 	for x := uint(0); x < 7; x++ {
@@ -32,7 +34,7 @@ func TestEvaluatePolynomial(tester *testing.T) {
 		temp4 := gfArith.Add(temp2, temp3)
 		expected := gfArith.Add(temp4, polynomial[0])
 
-		actual := EvaluatePolynomial(polynomial, x)
+		actual := EvaluatePolynomial(bytePolynomial, x)
 		if expected != actual {
 			tester.Errorf("expected %v but was %v", expected, actual)
 		}

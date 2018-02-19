@@ -1,43 +1,39 @@
 package main
 
 import (
-	"bytes"
-	cryptoRandom "crypto/rand"
-	"encoding/hex"
 	"fmt"
-	"log"
-	mathRandom "math/rand"
-	"time"
-
-	"./secretsharing"
 )
 
 func main() {
-	// xValues, yValues := secretsharing.CreateShares(6, 3, []byte{1, 2, 3})
-	// fmt.Println(xValues)
-	// fmt.Println(yValues)
-	start := time.Now()
-	// tests
-	for i := 0; i < 10000; i++ {
-		randomLength := mathRandom.Intn(64) + 1
-		fmt.Println(randomLength)
-		secretBytes := make([]byte, randomLength, randomLength)
-		cryptoRandom.Read(secretBytes)
-		xValues, yValues := secretsharing.CreateShares(6, 3, secretBytes)
-		recoveredBytes := secretsharing.RecoverSecret(xValues, yValues)
-		if !bytes.Equal(secretBytes, recoveredBytes) {
-			secretString := hex.EncodeToString(secretBytes)
-			recoveredString := hex.EncodeToString(recoveredBytes)
-			fmt.Println(secretString)
-			fmt.Println(recoveredString)
-			log.Fatal("fatal")
+	// start := time.Now()
+	// elapsed := time.Since(start)
+	// print(elapsed)
+	list := []byte{3, 6, 12, 254, 188}
+	var number uint
+	fmt.Println("Bits, least to most significant:")
+	var k uint
+	for j := 2; j < len(list); j++ {
+		x := list[j]
+		//fmt.Printf("%b\n", x)
+		fmt.Println("---------------")
+		fmt.Println(x)
+		fmt.Println("---------------")
+		for i := uint(0); i < 8; i++ {
+			bit := x & (1 << i) >> i
+			fmt.Println(bit)
+			if bit == 0 {
+				k++
+				continue
+			} else {
+				number += (1 << k)
+				k++
+			}
+			if k == 10 {
+				fmt.Println(number)
+				k = 0
+				number = 0
+			}
 		}
-		// fmt.Println(recoveredString)
-		//  assert secretBytes == secretsharing.RecoverSecret(shares[:3])
-		//  assert secretBytes == secretsharing.RecoverSecret(shares[-3:])
-		//  assert secretBytes == secretsharing.RecoverSecret([shares[1], shares[3], shares[4]])
 	}
-	elapsed := time.Since(start)
-	fmt.Println("finished successfully")
-	fmt.Println(elapsed)
+	fmt.Println(number)
 }
