@@ -21,7 +21,7 @@ func TestSecretSharing(tester *testing.T) {
 		randomN := uint(mathRandom.Intn(31) + 2)             // 2 <= randomN <= 32
 		randomK := uint(mathRandom.Intn(int(randomN-1)) + 2) // 2 <= randomK <= randomN
 		randomLength := mathRandom.Intn(64) + 1
-		secretBytes := make([]byte, randomLength, randomLength)
+		secretBytes := make([]byte, randomLength)
 		cryptoRandom.Read(secretBytes)
 		xValues, yValues := CreateShares(randomN, randomK, secretBytes)
 		assertEqual(secretBytes, RecoverSecret(xValues, yValues))
@@ -32,14 +32,42 @@ func TestSecretSharing(tester *testing.T) {
 	}
 }
 
-func Test256BitShare(tester *testing.T) {
-	secretBytes := make([]byte, 32, 32)
-	mathRandom.Read(secretBytes)
-	xValues, yValues := CreateShares(6, 3, secretBytes)
-	fXValues := createFormattedShare(xValues, yValues)
-	fmt.Println(fXValues[0])
-	fmt.Println(len(fXValues[0]))
+func TestGetWordIndexes(tester *testing.T) {
+	list := []byte{3, 6, 5, 10, 254, 199, 12, 2, 4}
+	wordIndexes := getWordIndexes(list)
+
+	fmt.Println(wordIndexes)
+	// if wordIndexes[0] != 102 { //00011 00110
+	// 	tester.Error()
+	// }
+	// if wordIndexes[1] != 517 {
+	// 	tester.Error()
+	// }
+	// if wordIndexes[2] != 898 {
+	// 	tester.Error()
+	// }
+	// if wordIndexes[3] != 127 {
+	// 	tester.Error()
+	// }
+	// if wordIndexes[4] != 51 {
+	// 	tester.Error()
+	// }
+	// if wordIndexes[5] != 2 {
+	// 	tester.Error()
+	// }
+	// if wordIndexes[6] != 1 {
+	// 	tester.Error()
+	// }
 }
+
+// func Test256BitShare(tester *testing.T) {
+// 	secretBytes := make([]byte, 32)
+// 	mathRandom.Read(secretBytes)
+// 	xValues, yValues := CreateShares(6, 3, secretBytes)
+// 	fXValues := createFormattedShare(xValues, yValues)
+// 	fmt.Println(fXValues[0])
+// 	fmt.Println(len(fXValues[0]))
+// }
 
 func TestGetChecksummedSecret(tester *testing.T) {
 	data := []byte("data")
@@ -55,8 +83,8 @@ func TestGetChecksummedSecret(tester *testing.T) {
 
 func getRandomSlices(xValues []uint, yValues [][]byte, k uint) ([]uint, [][]byte) {
 	tracker := make(map[int]bool, k)
-	randXSlice := make([]uint, k, k)
-	randYSlice := make([][]byte, k, k)
+	randXSlice := make([]uint, k)
+	randYSlice := make([][]byte, k)
 	var i uint
 	for i < k {
 		rand := mathRandom.Intn(len(xValues))
