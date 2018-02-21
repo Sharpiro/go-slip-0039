@@ -2,7 +2,6 @@ package secretsharing
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 
 	"../cryptos"
@@ -89,42 +88,40 @@ func createFormattedShare(xValues []uint, yValues [][]byte) [][]byte {
 func getWordLists(formattedShares [][]byte) [][]uint {
 	wordLists := make([][]uint, len(formattedShares))
 	for i := range wordLists {
-		wordLists[i] = getWordIndexes(formattedShares[i])
+		wordLists[i] = getWordIndexes(formattedShares[i], 8, 10)
 	}
 	return wordLists
 }
 
-func getWordIndexes(formattedShare []byte) []uint {
-	var blockSize uint = 5
-	tenBitNumbers := make([]uint, 0, 30)
-	// tenBitNumbers[0] = uint(formattedShare[0])
-	// tenBitNumbers[1] = uint(formattedShare[1])
-	var tenBitNumber uint
-	// fmt.Println("Bits, least to most significant:")
-	var power uint
-	// for i := 2; i < len(formattedShare); i++ {
-	for i := 0; i < 2; i++ {
+func getWordIndexes(formattedShare []byte, byteSize int, splitSize int) []uint {
+	var createdNumbers []uint
+	var currentNumber uint
+	power := splitSize - 1
+	for i := 0; i < len(formattedShare); i++ {
 		x := formattedShare[i]
-		// fmt.Println("---------------")
-		for j := uint(0); j < blockSize; j++ {
-			bit := x & (1 << j) >> j
-			fmt.Println(bit)
+		for j := int(byteSize - 1); j >= 0; j-- {
+			bit := x & (1 << uint(j)) >> uint(j)
+			// fmt.Println(bit)
 			if bit == 1 {
-				tenBitNumber += (1 << power)
+				currentNumber += (1 << uint(power))
 			}
-			power++
-			if power == 10 {
-				fmt.Println("---------------")
-				tenBitNumbers = append(tenBitNumbers, tenBitNumber)
-				power = 0
-				tenBitNumber = 0
+			power--
+			if power == -1 {
+				// fmt.Println("---------------")
+				createdNumbers = append(createdNumbers, currentNumber)
+				if i+1 == len(formattedShare) {
+					power = j - 1
+				} else {
+					power = splitSize - 1
+				}
+				currentNumber = 0
 			}
 		}
 	}
-	if power != 0 {
-		tenBitNumbers = append(tenBitNumbers, tenBitNumber)
+	if power != -1 {
+		createdNumbers = append(createdNumbers, currentNumber)
 	}
-	return tenBitNumbers
+	return createdNumbers
 }
 
 func getChecksummedSecret(secret []byte) []byte {
