@@ -6,7 +6,16 @@ import (
 
 	"../cryptos"
 	"../maths"
+	"../maths/bits"
 )
+
+//CreateSharesX creates shares based off a given secret
+func CreateSharesX(n, k uint, secret []byte) [][]string {
+	xValues, yValues := CreateShares(n, k, secret)
+	formattedShares := createFormattedShare(xValues, yValues)
+	wordLists := getWordLists(formattedShares)
+	return wordLists
+}
 
 //CreateShares creates shares based off a given secret
 func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
@@ -38,9 +47,29 @@ func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 		xValues[i] = uint(i) + 1
 		yValues[i] = values[i]
 	}
-	// formattedShares := createFormattedShare(xValues, yValues)
-	// _ = getWordLists(formattedShares)
 	return xValues, yValues
+}
+
+func getWordLists(formattedShares [][]byte) [][]string {
+	wordLists := make([][]string, len(formattedShares))
+	for i := range wordLists {
+		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
+		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
+		combined := append(first, second...)
+		wordLists[i] = getWordList(combined)
+	}
+	return wordLists
+}
+
+func getWordList(combined []uint) []string {
+	words := make([]string, len(combined))
+	for i, v := range combined {
+		if v&1024 != 0 {
+			log.Fatal("word index must be less than 1024")
+		}
+		words[i] = wordList[v]
+	}
+	return words
 }
 
 //RecoverSecret recovers the secret provided by k shares
@@ -71,8 +100,8 @@ func RecoverSecret(xValues []uint, yValues [][]byte) []byte {
 func createFormattedShare(xValues []uint, yValues [][]byte) [][]byte {
 	shares := make([][]byte, len(xValues))
 	for i := 0; i < len(xValues); i++ {
-		index := xValues[i]
-		threshold := len(xValues)
+		index := xValues[i] - 1
+		threshold := len(xValues) - 1
 		sssPart := yValues[i]
 		concatLen := len(sssPart) + 1 + 1 + 2
 		concat := make([]byte, 0, concatLen)

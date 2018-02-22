@@ -32,6 +32,32 @@ func TestSecretSharing(tester *testing.T) {
 	}
 }
 
+func TestShareIndexAndThreshold(tester *testing.T) {
+	randomLength := 32
+	secretBytes := make([]byte, randomLength)
+	cryptoRandom.Read(secretBytes)
+	wordLists := CreateSharesX(6, 3, secretBytes)
+
+	if wordLists[0][0] != wordList[5] {
+		tester.Error()
+	}
+	if wordLists[1][0] != wordList[37] {
+		tester.Error()
+	}
+	if wordLists[2][0] != wordList[69] {
+		tester.Error()
+	}
+	if wordLists[3][0] != wordList[101] {
+		tester.Error()
+	}
+	if wordLists[4][0] != wordList[133] {
+		tester.Error()
+	}
+	if wordLists[5][0] != wordList[165] {
+		tester.Error()
+	}
+}
+
 // func Test256BitShare(tester *testing.T) {
 // 	secretBytes := make([]byte, 32)
 // 	mathRandom.Read(secretBytes)
@@ -40,6 +66,29 @@ func TestSecretSharing(tester *testing.T) {
 // 	fmt.Println(fXValues[0])
 // 	fmt.Println(len(fXValues[0]))
 // }
+
+func TestGetWordList(tester *testing.T) {
+	combined := []uint{102, 20, 175, 1009, 3}
+	wordList := getWordList(combined)
+
+	fmt.Println(wordList)
+
+	if wordList[0] != "bridge" {
+		tester.Error()
+	}
+	if wordList[1] != "alcohol" {
+		tester.Error()
+	}
+	if wordList[2] != "cousin" {
+		tester.Error()
+	}
+	if wordList[3] != "winter" {
+		tester.Error()
+	}
+	if wordList[4] != "actor" {
+		tester.Error()
+	}
+}
 
 func TestGetChecksummedSecret(tester *testing.T) {
 	data := []byte("data")
