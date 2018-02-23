@@ -6,24 +6,31 @@ import (
 
 	"../cryptos"
 	"../maths"
-	"../maths/bits"
 )
 
-//CreateSharesX creates shares based off a given secret
+// CreateSharesX creates shares based off a given secret
 func CreateSharesX(n, k uint, secret []byte) [][]string {
-	xValues, yValues := CreateShares(n, k, secret)
+	checksummedSecret := getChecksummedSecret(secret)
+	xValues, yValues := CreateShares(n, k, checksummedSecret)
 	formattedShares := createFormattedShare(xValues, yValues)
 	wordLists := getWordLists(formattedShares)
 	return wordLists
 }
 
-//CreateShares creates shares based off a given secret
+// RecoverSharesX recovers a secret based off of K supplied word lists
+func RecoverSharesX(wordLists [][]string) {
+
+	// checkSummedSecret := RecoverSecret(xValues, yValues)
+	// secret := getSecret(checkSummedSecret)
+
+}
+
+// CreateShares creates shares based off a given secret
 func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 	if n < k {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
-	checksummedSecret := getChecksummedSecret(secret)
-	secretLen := len(checksummedSecret)
+	secretLen := len(secret)
 	values := make([][]byte, n)
 	for i := range values {
 		values[i] = make([]byte, secretLen)
@@ -32,7 +39,7 @@ func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 	// for each byte in the secret
 	for i := 0; i < secretLen; i++ {
 		randomPolynomial := maths.CreateRandomPolynomial(k - 1)
-		randomPolynomial[0] = checksummedSecret[i]
+		randomPolynomial[0] = secret[i]
 
 		// for each n shares
 		for x := uint(1); x <= n; x++ {
@@ -48,28 +55,6 @@ func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 		yValues[i] = values[i]
 	}
 	return xValues, yValues
-}
-
-func getWordLists(formattedShares [][]byte) [][]string {
-	wordLists := make([][]string, len(formattedShares))
-	for i := range wordLists {
-		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
-		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
-		combined := append(first, second...)
-		wordLists[i] = getWordList(combined)
-	}
-	return wordLists
-}
-
-func getWordList(combined []uint) []string {
-	words := make([]string, len(combined))
-	for i, v := range combined {
-		if v&1024 != 0 {
-			log.Fatal("word index must be less than 1024")
-		}
-		words[i] = wordList[v]
-	}
-	return words
 }
 
 //RecoverSecret recovers the secret provided by k shares
@@ -93,8 +78,12 @@ func RecoverSecret(xValues []uint, yValues [][]byte) []byte {
 		interpolation := maths.LagrangeInterpolate(0, subXValues, subYValues)
 		csSecret[i] = byte(interpolation)
 	}
-	secret := getSecret(csSecret)
+	secret := csSecret
 	return secret
+}
+
+func recoverFromFormattedShare() {
+
 }
 
 func createFormattedShare(xValues []uint, yValues [][]byte) [][]byte {
