@@ -3,7 +3,7 @@ package maths
 import (
 	"testing"
 
-	gfArith "./gfmaths"
+	gfArith "go-slip-0039/maths/gfmaths"
 )
 
 func TestGetPolynomialDegree(tester *testing.T) {

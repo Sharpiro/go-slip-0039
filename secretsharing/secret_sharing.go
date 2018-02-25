@@ -2,10 +2,9 @@ package secretsharing
 
 import (
 	"bytes"
+	"go-slip-0039/cryptos"
+	"go-slip-0039/maths"
 	"log"
-
-	"../cryptos"
-	"../maths"
 )
 
 // CreateSharesX creates shares based off a given secret

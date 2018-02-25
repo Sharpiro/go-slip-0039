@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"../cryptos"
+	"go-slip-0039/cryptos"
 )
 
 var _tester *testing.T

@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"log"
 
-	gfArith "./gfmaths"
+	gfArith "go-slip-0039/maths/gfmaths"
 )
 
 const prime uint = 0x11b

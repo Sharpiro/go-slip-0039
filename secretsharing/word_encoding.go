@@ -3,7 +3,7 @@ package secretsharing
 import (
 	"log"
 
-	"../maths/bits"
+	"go-slip-0039/maths/bits"
 )
 
 func getWordLists(formattedShares [][]byte) [][]string {
