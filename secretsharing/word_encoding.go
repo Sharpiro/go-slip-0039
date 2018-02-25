@@ -1,8 +1,9 @@
 package secretsharing
 
 import (
-	"../maths/bits"
 	"log"
+
+	"../maths/bits"
 )
 
 func getWordLists(formattedShares [][]byte) [][]string {
@@ -29,10 +30,14 @@ func getWordList(combined []uint) []string {
 
 func getIndexLists(wordLists [][]string) [][]byte {
 	indexLists := make([][]byte, len(wordLists))
-	for _, wordList := range wordLists {
+	for i, wordList := range wordLists {
 		indexList := getIndexList(wordList)
-		_=indexList
-		// indexLists[i] = indexList
+		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 0, 0)
+		bytes := bits.ReverseBitsBigEndian(indexList[1:len(indexList)-1], 0, 0)
+		postBytes := bits.ReverseBitsBigEndian(indexList[len(indexList)-1:], 0, 0)
+		combined := append(preBytes, bytes...)
+		combined[len(combined)-1] += postBytes[0]
+		indexLists[i] = combined
 	}
 	return indexLists
 }

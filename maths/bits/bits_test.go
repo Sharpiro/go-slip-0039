@@ -1,8 +1,45 @@
 package bits
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestReverseBitsBigEndian(tester *testing.T) {
+	indexes := []uint{102, 20, 175, 1009, 3}
+	preBytes := ReverseBitsBigEndian(indexes[:1], 5, 10)
+	bytes := ReverseBitsBigEndian(indexes[1:4], 8, 10)
+	postBytes := ReverseBitsBigEndian(indexes[4:], 10, 10)
+
+	fmt.Println(preBytes)
+	fmt.Println(bytes)
+	fmt.Println(postBytes)
+
+	if len(preBytes) != 2 {
+		tester.Error()
+	}
+	if preBytes[0] != 3 {
+		tester.Error()
+	}
+	if preBytes[1] != 6 {
+		tester.Error()
+	}
+	if len(bytes) != 4 {
+		tester.Error()
+	}
+	if bytes[0] != 5 {
+		tester.Error()
+	}
+	if bytes[1] != 10 {
+		tester.Error()
+	}
+	if bytes[2] != 255 {
+		tester.Error()
+	}
+	if bytes[3]+postBytes[0] != 199 {
+		tester.Error()
+	}
+}
 
 func TestGetBitBlocksBigEndian(tester *testing.T) {
 	pre := []byte{3, 6}

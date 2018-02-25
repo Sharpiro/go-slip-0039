@@ -12,17 +12,18 @@ import (
 func CreateSharesX(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := CreateShares(n, k, checksummedSecret)
-	formattedShares := createFormattedShare(xValues, yValues)
+	formattedShares := createFormattedShares(xValues, yValues)
 	wordLists := getWordLists(formattedShares)
 	return wordLists
 }
 
 // RecoverSharesX recovers a secret based off of K supplied word lists
-func RecoverSharesX(wordLists [][]string) {
-
-	// checkSummedSecret := RecoverSecret(xValues, yValues)
-	// secret := getSecret(checkSummedSecret)
-
+func RecoverSharesX(wordLists [][]string) []byte {
+	indexLists := getIndexLists(wordLists)
+	xValues, yValues := recoverFromFormattedShare(indexLists)
+	checkSummedSecret := RecoverSecret(xValues, yValues)
+	secret := getSecret(checkSummedSecret)
+	return secret
 }
 
 // CreateShares creates shares based off a given secret
@@ -82,11 +83,26 @@ func RecoverSecret(xValues []uint, yValues [][]byte) []byte {
 	return secret
 }
 
-func recoverFromFormattedShare() {
-
+func recoverFromFormattedShare(shareBlock [][]byte) ([]uint, [][]byte) {
+	const encodingOffset byte = 1
+	xValues := make([]uint, len(shareBlock))
+	yValues := make([][]byte, len(shareBlock))
+	for i := 0; i < len(shareBlock); i++ {
+		expectedChecksum := shareBlock[i][len(shareBlock[i])-2:]
+		actualData := shareBlock[i][:len(shareBlock[i])-2]
+		actualChecksum := cryptos.GetSha256(actualData)[:2]
+		if !bytes.Equal(expectedChecksum, actualChecksum) {
+			log.Fatal("failed while recovering share, expected checksum does not match actual")
+		}
+		index := uint(shareBlock[i][0] + encodingOffset)
+		sssPart := shareBlock[i][2 : len(shareBlock[i])-2]
+		xValues[i] = index
+		yValues[i] = sssPart
+	}
+	return xValues, yValues
 }
 
-func createFormattedShare(xValues []uint, yValues [][]byte) [][]byte {
+func createFormattedShares(xValues []uint, yValues [][]byte) [][]byte {
 	shares := make([][]byte, len(xValues))
 	for i := 0; i < len(xValues); i++ {
 		index := xValues[i] - 1

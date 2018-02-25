@@ -32,14 +32,24 @@ func TestSecretSharing(tester *testing.T) {
 	}
 }
 
-// func Test256BitShare(tester *testing.T) {
-// 	secretBytes := make([]byte, 32)
-// 	mathRandom.Read(secretBytes)
-// 	xValues, yValues := CreateShares(6, 3, secretBytes)
-// 	fXValues := createFormattedShare(xValues, yValues)
-// 	fmt.Println(fXValues[0])
-// 	fmt.Println(len(fXValues[0]))
-// }
+func TestShareFormatting(tester *testing.T) {
+	secretBytes := make([]byte, 32)
+	mathRandom.Read(secretBytes)
+	xValues, yValues := CreateShares(6, 3, secretBytes)
+	fXValues := createFormattedShares(xValues, yValues)
+	recoveredX, recoveredY := recoverFromFormattedShare(fXValues)
+	for i, v := range fXValues {
+		if len(v) != 36 {
+			tester.Error("expected formatted share to be 36 bytes")
+		}
+		if !bytes.Equal(yValues[i], recoveredY[i]) {
+			tester.Error("recovered y values did not match expected")
+		}
+		if xValues[i] != recoveredX[i] {
+			tester.Error("recovered x values did not match expected")
+		}
+	}
+}
 
 func TestGetChecksummedSecret(tester *testing.T) {
 	data := []byte("data")
