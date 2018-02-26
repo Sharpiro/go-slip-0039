@@ -8,12 +8,17 @@ import (
 func TestReverseBitsBigEndian(tester *testing.T) {
 	indexes := []uint{102, 20, 175, 1009, 3}
 	preBytes := ReverseBitsBigEndian(indexes[:1], 5, 10)
-	bytes := ReverseBitsBigEndian(indexes[1:4], 8, 10)
-	postBytes := ReverseBitsBigEndian(indexes[4:], 10, 10)
+	bytes := ReverseBitsBigEndian(indexes[1:5], 8, 10)
+	if len(bytes) > 4 {
+		extra := bytes[len(bytes)-1]
+		bytes = bytes[:len(bytes)-1]
+		bytes[len(bytes)-1] += extra
+	}
+	// postBytes := ReverseBitsBigEndian(indexes[4:], 10, 10)
 
-	fmt.Println(preBytes)
-	fmt.Println(bytes)
-	fmt.Println(postBytes)
+	// fmt.Println(preBytes)
+	// fmt.Println(bytes)
+	// fmt.Println(postBytes)
 
 	if len(preBytes) != 2 {
 		tester.Error()
@@ -36,9 +41,115 @@ func TestReverseBitsBigEndian(tester *testing.T) {
 	if bytes[2] != 255 {
 		tester.Error()
 	}
-	if bytes[3]+postBytes[0] != 199 {
+	if bytes[3] != 199 {
 		tester.Error()
 	}
+}
+
+func TestReverseBitsBigEndian2(tester *testing.T) {
+	indexes := []uint{5, 173, 295, 233, 632}
+	// expectedBytes := []byte{0, 5, 43, 82, 115, 166, 120}
+
+	preSlice := indexes[:1]
+	preBytes := ReverseBitsBigEndian(preSlice, 5, 10)
+	slice := indexes[1:5]
+	bytes := ReverseBitsBigEndian(slice, 8, 10)
+	// postSlice := indexes[4:]
+	// postBytes := ReverseBitsBigEndian(postSlice, 8, 10)
+
+	// fmt.Println(preBytes)
+	// fmt.Println()
+	// fmt.Println(bytes)
+	// fmt.Println(postBytes)
+
+	if len(preBytes) != 2 {
+		tester.Error()
+	}
+	if preBytes[0] != 0 {
+		tester.Error()
+	}
+	if preBytes[1] != 5 {
+		tester.Error()
+	}
+	if len(bytes) != 5 {
+		tester.Error()
+	}
+	if bytes[0] != 43 {
+		tester.Error()
+	}
+	if bytes[1] != 82 {
+		tester.Error()
+	}
+	if bytes[2] != 115 {
+		tester.Error()
+	}
+	if bytes[3] != 166 {
+		tester.Error()
+	}
+	if bytes[4] != 120 {
+		tester.Error()
+	}
+}
+
+func TestReverseBitsBigEndian3(tester *testing.T) {
+	indexes := []uint{201, 730, 252, 646, 750, 1}
+	// expectedBytes := []byte{50, 109, 163, 242, 134, 187, 129}
+
+	bytes := ReverseBitsBigEndian(indexes, 8, 10)
+	if len(bytes) > 7 {
+		extra := bytes[len(bytes)-1]
+		bytes = bytes[:len(bytes)-1]
+		bytes[len(bytes)-1] += extra
+	}
+
+	// fmt.Println()
+	// fmt.Println(expectedBytes)
+	// fmt.Println(bytes)
+
+	if len(bytes) != 7 {
+		tester.Error()
+	}
+	if bytes[0] != 50 {
+		tester.Error()
+	}
+	if bytes[1] != 109 {
+		tester.Error()
+	}
+	if bytes[2] != 163 {
+		tester.Error()
+	}
+	if bytes[3] != 242 {
+		tester.Error()
+	}
+	if bytes[4] != 134 {
+		tester.Error()
+	}
+	if bytes[5] != 187 {
+		tester.Error()
+	}
+	if bytes[6] != 129 {
+		tester.Error()
+	}
+}
+
+func TestReverseBitsBigEndian4(tester *testing.T) {
+	indexes := []uint{384, 276, 567, 655, 843, 36}
+	expectedBytes := []byte{96, 17, 72, 222, 143, 210, 228}
+	_ = expectedBytes
+
+	bytes := ReverseBitsBigEndian(indexes, 8, 10)
+
+	fmt.Println()
+	fmt.Println(expectedBytes)
+	fmt.Println(bytes)
+}
+
+func TestGetBitBlocksBigEndian2(tester *testing.T) {
+	list := []byte{96, 17, 72, 222, 143, 210, 228}
+	wordIndexes2 := GetBitBlocksBigEndian(list, 8, 10)
+
+	fmt.Println()
+	fmt.Println(wordIndexes2)
 }
 
 func TestGetBitBlocksBigEndian(tester *testing.T) {

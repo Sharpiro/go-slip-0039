@@ -32,11 +32,17 @@ func getIndexLists(wordLists [][]string) [][]byte {
 	indexLists := make([][]byte, len(wordLists))
 	for i, wordList := range wordLists {
 		indexList := getIndexList(wordList)
-		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 0, 0)
-		bytes := bits.ReverseBitsBigEndian(indexList[1:len(indexList)-1], 0, 0)
-		postBytes := bits.ReverseBitsBigEndian(indexList[len(indexList)-1:], 0, 0)
+		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10)
+		// bytes := bits.ReverseBitsBigEndian(indexList[1:len(indexList)-1], 8, 10)
+		bytes := bits.ReverseBitsBigEndian(indexList[1:], 8, 10)
+		if len(bytes) > 7 {
+			extra := bytes[len(bytes)-1]
+			bytes = bytes[:len(bytes)-1]
+			bytes[len(bytes)-1] += extra
+		}
+		// postBytes := bits.ReverseBitsBigEndian(indexList[len(indexList)-1:], 8, 10)
 		combined := append(preBytes, bytes...)
-		combined[len(combined)-1] += postBytes[0]
+		// combined[len(combined)-1] += postBytes[0]
 		indexLists[i] = combined
 	}
 	return indexLists

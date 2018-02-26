@@ -10,24 +10,24 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 	randomLength := 32
 	secretBytes := make([]byte, randomLength)
 	cryptoRandom.Read(secretBytes)
-	wordLists := CreateSharesX(6, 3, secretBytes)
+	wordLists := CreateWordShares(6, 3, secretBytes)
 
-	if wordLists[0][0] != wordList[5] {
+	if wordLists[0][0] != "adapt" {
 		tester.Error()
 	}
-	if wordLists[1][0] != wordList[37] {
+	if wordLists[1][0] != "antenna" {
 		tester.Error()
 	}
-	if wordLists[2][0] != wordList[69] {
+	if wordLists[2][0] != "become" {
 		tester.Error()
 	}
-	if wordLists[3][0] != wordList[101] {
+	if wordLists[3][0] != "bread" {
 		tester.Error()
 	}
-	if wordLists[4][0] != wordList[133] {
+	if wordLists[4][0] != "ceiling" {
 		tester.Error()
 	}
-	if wordLists[5][0] != wordList[165] {
+	if wordLists[5][0] != "coconut" {
 		tester.Error()
 	}
 }

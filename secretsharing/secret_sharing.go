@@ -7,26 +7,25 @@ import (
 	"log"
 )
 
-// CreateSharesX creates shares based off a given secret
-func CreateSharesX(n, k uint, secret []byte) [][]string {
+// CreateWordShares creates shares based off a given secret
+func CreateWordShares(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
-	xValues, yValues := CreateShares(n, k, checksummedSecret)
+	xValues, yValues := createShares(n, k, checksummedSecret)
 	formattedShares := createFormattedShares(xValues, yValues)
 	wordLists := getWordLists(formattedShares)
 	return wordLists
 }
 
-// RecoverSharesX recovers a secret based off of K supplied word lists
-func RecoverSharesX(wordLists [][]string) []byte {
+// RecoverFromWordShares recovers a secret based off of K supplied word lists
+func RecoverFromWordShares(wordLists [][]string) []byte {
 	indexLists := getIndexLists(wordLists)
 	xValues, yValues := recoverFromFormattedShare(indexLists)
-	checkSummedSecret := RecoverSecret(xValues, yValues)
+	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
 	return secret
 }
 
-// CreateShares creates shares based off a given secret
-func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
+func createShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 	if n < k {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
@@ -57,8 +56,7 @@ func CreateShares(n, k uint, secret []byte) ([]uint, [][]byte) {
 	return xValues, yValues
 }
 
-//RecoverSecret recovers the secret provided by k shares
-func RecoverSecret(xValues []uint, yValues [][]byte) []byte {
+func recoverSecret(xValues []uint, yValues [][]byte) []byte {
 	numberOfShares := len(yValues)
 	if numberOfShares < 2 {
 		log.Fatal("need at least two shares to recover a secret")
