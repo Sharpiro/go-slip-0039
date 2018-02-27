@@ -33,24 +33,33 @@ func TestSecretSharing(tester *testing.T) {
 }
 
 func TestSecretSharingWords(tester *testing.T) {
-	// actualSecret := []byte("ths is 8")
+	// actualSecret := []byte("doggg")
 	// actualSecret := []byte{1}
-	actualSecret := []byte{1, 1, 1}
+	// actualSecret := []byte{1, 1, 1}
 	// formattedShares := [][]byte{[]byte{0, 5, 43, 82, 115, 166, 120}}
 	// wordLists := getWordLists(formattedShares)
 	// indexLists := getIndexLists(wordLists)
-	// actualSecret := make([]byte, 32)
-	// cryptoRandom.Read(actualSecret)
-	wordShares := CreateWordShares(6, 3, actualSecret)
-	expectedSecret := RecoverFromWordShares(wordShares)
 
-	// fmt.Println(wordShares)
-	// fmt.Println(formattedShares[0])
-	// fmt.Println(indexLists[0])
-	fmt.Println(actualSecret)
-	fmt.Println(expectedSecret)
-	if !bytes.Equal(actualSecret, expectedSecret) {
-		tester.Error("secrets do not match")
+	for j := 0; j < 10; j++ {
+		for i := 0; i < 64; i++ {
+			byteLength := i + 1
+			bitLength := (byteLength + 2 + 2) << 3
+			actualSecret := make([]byte, byteLength)
+			cryptoRandom.Read(actualSecret)
+			wordShares := CreateWordShares(6, 3, actualSecret)
+			expectedSecret := RecoverFromWordShares(wordShares, bitLength)
+
+			// fmt.Println(wordShares)
+			// fmt.Println(formattedShares[0])
+			// fmt.Println(indexLists[0])
+			// fmt.Println(len(actualSecret))
+			// fmt.Println(len(expectedSecret))
+			// fmt.Println(actualSecret)
+			// fmt.Println(expectedSecret)
+			if !bytes.Equal(actualSecret, expectedSecret) {
+				tester.Error("secrets do not match")
+			}
+		}
 	}
 }
 

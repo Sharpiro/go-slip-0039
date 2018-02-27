@@ -2,7 +2,6 @@ package secretsharing
 
 import (
 	cryptoRandom "crypto/rand"
-	"fmt"
 	"testing"
 )
 
@@ -36,7 +35,7 @@ func TestGetWordList(tester *testing.T) {
 	indexList := []uint{102, 20, 175, 1009, 3}
 	wordList := getWordList(indexList)
 
-	fmt.Println(wordList)
+	// fmt.Println(wordList)
 
 	if wordList[0] != "bridge" {
 		tester.Error()
@@ -59,7 +58,7 @@ func TestGetIndexList(tester *testing.T) {
 	wordList := []string{"bridge", "alcohol", "cousin", "winter", "actor"}
 	indexList := getIndexList(wordList)
 
-	fmt.Println(indexList)
+	// fmt.Println(indexList)
 
 	if indexList[0] != 102 {
 		tester.Error()

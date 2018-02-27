@@ -17,8 +17,8 @@ func CreateWordShares(n, k uint, secret []byte) [][]string {
 }
 
 // RecoverFromWordShares recovers a secret based off of K supplied word lists
-func RecoverFromWordShares(wordLists [][]string) []byte {
-	indexLists := getIndexLists(wordLists)
+func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
+	indexLists := getIndexLists(wordLists, bitLength)
 	xValues, yValues := recoverFromFormattedShare(indexLists)
 	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
