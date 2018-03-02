@@ -5,11 +5,10 @@ import (
 	cryptoRandom "crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"go-slip-0039/cryptos"
 	mathRandom "math/rand"
 	"testing"
 	"time"
-
-	"go-slip-0039/cryptos"
 )
 
 var _tester *testing.T
@@ -41,13 +40,20 @@ func TestSecretSharingWords(tester *testing.T) {
 	// indexLists := getIndexLists(wordLists)
 
 	for j := 0; j < 10; j++ {
-		for i := 0; i < 64; i++ {
+		for i := 4; i < 64; i++ {
 			byteLength := i + 1
-			bitLength := (byteLength + 2 + 2) << 3
+			createdBitLength := (byteLength + 2 + 2) << 3
 			actualSecret := make([]byte, byteLength)
 			cryptoRandom.Read(actualSecret)
 			wordShares := CreateWordShares(6, 3, actualSecret)
-			expectedSecret := RecoverFromWordShares(wordShares, bitLength)
+			// recoveredBitLength := int(math.Ceil(float64(len(wordShares[0]))*10/8)-2) * 8
+			// recoveredBitLengthFloat := ((float64(len(wordShares[0])) * 10 / 8) - 2) * 8
+			// recoveredBitLength := int(recoveredBitLengthFloat)
+
+			// if createdBitLength != recoveredBitLength {
+			// 	log.Fatal("there was a mismatch between created bit length and recovered bit length")
+			// }
+			expectedSecret := RecoverFromWordShares(wordShares, createdBitLength)
 
 			// fmt.Println(wordShares)
 			// fmt.Println(formattedShares[0])
@@ -66,11 +72,12 @@ func TestSecretSharingWords(tester *testing.T) {
 func TestShareFormatting(tester *testing.T) {
 	secretBytes := make([]byte, 32)
 	mathRandom.Read(secretBytes)
-	xValues, yValues := createShares(6, 3, secretBytes)
+	checksummedSecret := getChecksummedSecret(secretBytes)
+	xValues, yValues := createShares(6, 3, checksummedSecret)
 	formattedShares := createFormattedShares(xValues, yValues, 3)
 	recoveredXValues, recoveredYValues := recoverFromFormattedShare(formattedShares)
 	for i, v := range formattedShares {
-		if len(v) != 36 {
+		if len(v) != 38 {
 			tester.Error("expected formatted share to be 36 bytes")
 		}
 		if !bytes.Equal(yValues[i], recoveredYValues[i]) {

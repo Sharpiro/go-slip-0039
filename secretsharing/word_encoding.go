@@ -40,7 +40,13 @@ func AnalyzeFirstWord(firstWord string) (index byte, threshold byte) {
 
 func getIndexLists(wordLists [][]string, bitLength int) [][]byte {
 	indexLists := make([][]byte, len(wordLists))
+	dupeIndexVerifier := make(map[string]bool, len(wordLists))
+
 	for i, wordList := range wordLists {
+		if _, exists := dupeIndexVerifier[wordList[0]]; exists {
+			log.Fatal("Two shares had identical indexes, each share must have a unique index")
+		}
+		dupeIndexVerifier[wordList[0]] = true
 		indexList := getIndexList(wordList)
 		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
 		bytes := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
@@ -56,7 +62,7 @@ func getIndexList(words []string) []uint {
 		if val, exists := wordMap[v]; exists {
 			indexes[i] = val
 		} else {
-			log.Fatal("invalid word found while creating index list")
+			log.Fatal("invalid word provided while creating index list")
 		}
 	}
 	return indexes

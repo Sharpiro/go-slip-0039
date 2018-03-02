@@ -78,14 +78,12 @@ func create(context *cli.Context) {
 func recover(context *cli.Context) {
 	protected := context.Bool("protected")
 	secretSizeBits := context.Int("size")
-	readInput(protected, secretSizeBits)
-	return
-	var shares [][]string
-	var secretBytes []byte
+	shares := readShares(protected, secretSizeBits)
 	passPhrase := context.String("passphrase")
 
-	bitLength := (len(secretBytes) + 4) << 3
-	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares[1:], bitLength)
+	// totalBitLength := (len(secretBytes) + 4) << 3
+	totalBitLength := secretSizeBits + 32
+	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares, totalBitLength)
 	recoveredSecret := hex.EncodeToString(recoveredSecretBytes)
 	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
 	generatedSeedHex := hex.EncodeToString(generatedSeed)
@@ -95,10 +93,29 @@ func recover(context *cli.Context) {
 	fmt.Printf("seed: %v\n", generatedSeedHex)
 }
 
-func readInput(protected bool, secretSizeBits int) {
-	var data string
+func readShares(protected bool, secretSizeBits int) [][]string {
+	var wordLists [][]string
+	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("please enter your first share")
+	firstShare := readShare(reader, protected, 1)
+
+	wordLists = append(wordLists, firstShare)
+	index, threshold, _ := secretsharing.AnalyzeShare(firstShare)
+	// fmt.Println(firstShare)
+	fmt.Println("index: ", index)
+	fmt.Println("threshold: ", threshold)
+	fmt.Println("length: ", secretSizeBits)
+
+	for i := 1; i < threshold; i++ {
+		share := readShare(reader, protected, i+1)
+		wordLists = append(wordLists, share)
+	}
+	return wordLists
+}
+
+func readShare(reader *bufio.Reader, protected bool, shareNumber int) []string {
+	var data string
+	fmt.Printf("please enter share %v:\n", shareNumber)
 	if protected {
 		dataBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
@@ -106,7 +123,6 @@ func readInput(protected bool, secretSizeBits int) {
 		}
 		data = string(dataBytes)
 	} else {
-		reader := bufio.NewReader(os.Stdin)
 		var err error
 		dataBytes, _, err := reader.ReadLine()
 		if err != nil {
@@ -115,9 +131,5 @@ func readInput(protected bool, secretSizeBits int) {
 		data = string(dataBytes)
 	}
 	split := strings.Split(data, " ")
-	index, threshold, _ := secretsharing.AnalyzeShare(split)
-	fmt.Println(split)
-	fmt.Println("index: ", index)
-	fmt.Println("threshold: ", threshold)
-	fmt.Println("length: ", secretSizeBits)
+	return split
 }
