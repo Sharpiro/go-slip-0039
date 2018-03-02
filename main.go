@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"encoding/hex"
 	"fmt"
 	"go-slip-0039/cryptos"
 	"go-slip-0039/secretsharing"
 	"log"
 	"os"
+	"strings"
+	"syscall"
 
 	"github.com/urfave/cli"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func main() {
@@ -23,7 +27,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "secret",
-					Value: "fffaac234dac",
+					Value: "fffaac234dac4dacfffaac234dac4dacfffaac234dac4dacfffaac234dac4dac",
 					Usage: "the master secret",
 				},
 			},
@@ -34,21 +38,22 @@ func main() {
 			Aliases: []string{"r"},
 			Usage:   "recover secret shares",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "shares",
-					Value: "a list of shares",
-					Usage: "the master secret",
+				cli.BoolFlag{
+					Name:  "protected",
+					Usage: "hide console input",
 				},
 				cli.StringFlag{
 					Name:  "passphrase",
 					Value: "",
 					Usage: "an optional passphrase for generating a seed",
 				},
+				cli.IntFlag{
+					Name:  "size",
+					Value: 256,
+					Usage: "the size in bits of the master secret",
+				},
 			},
-			Action: func(c *cli.Context) error {
-				fmt.Println("recovering is harder....")
-				return nil
-			},
+			Action: recover,
 		},
 	}
 
@@ -71,6 +76,10 @@ func create(context *cli.Context) {
 }
 
 func recover(context *cli.Context) {
+	protected := context.Bool("protected")
+	secretSizeBits := context.Int("size")
+	readInput(protected, secretSizeBits)
+	return
 	var shares [][]string
 	var secretBytes []byte
 	passPhrase := context.String("passphrase")
@@ -84,4 +93,31 @@ func recover(context *cli.Context) {
 	fmt.Printf("passphrase: %v\n", passPhrase)
 	fmt.Printf("recovered secret: %v\n", recoveredSecret)
 	fmt.Printf("seed: %v\n", generatedSeedHex)
+}
+
+func readInput(protected bool, secretSizeBits int) {
+	var data string
+
+	fmt.Println("please enter your first share")
+	if protected {
+		dataBytes, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.Fatal(err)
+		}
+		data = string(dataBytes)
+	} else {
+		reader := bufio.NewReader(os.Stdin)
+		var err error
+		dataBytes, _, err := reader.ReadLine()
+		if err != nil {
+			log.Fatal(err)
+		}
+		data = string(dataBytes)
+	}
+	split := strings.Split(data, " ")
+	index, threshold, _ := secretsharing.AnalyzeShare(split)
+	fmt.Println(split)
+	fmt.Println("index: ", index)
+	fmt.Println("threshold: ", threshold)
+	fmt.Println("length: ", secretSizeBits)
 }

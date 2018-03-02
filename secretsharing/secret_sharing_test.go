@@ -67,7 +67,7 @@ func TestShareFormatting(tester *testing.T) {
 	secretBytes := make([]byte, 32)
 	mathRandom.Read(secretBytes)
 	xValues, yValues := createShares(6, 3, secretBytes)
-	formattedShares := createFormattedShares(xValues, yValues)
+	formattedShares := createFormattedShares(xValues, yValues, 3)
 	recoveredXValues, recoveredYValues := recoverFromFormattedShare(formattedShares)
 	for i, v := range formattedShares {
 		if len(v) != 36 {

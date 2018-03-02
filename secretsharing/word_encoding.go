@@ -28,21 +28,23 @@ func getWordList(combined []uint) []string {
 	return words
 }
 
+// AnalyzeFirstWord analyzes the first word of a share to provide data about the share
+func AnalyzeFirstWord(firstWord string) (index byte, threshold byte) {
+	indexList := getIndexList([]string{firstWord})
+	preBytes := bits.ReverseBitsBigEndian(indexList, 5, 10, 16)
+	if len(preBytes) != 2 {
+		log.Fatalf("Failed analyzing first word, expected 2 bytes, but was %v", len(preBytes))
+	}
+	return preBytes[0] + 1, preBytes[1] + 1
+}
+
 func getIndexLists(wordLists [][]string, bitLength int) [][]byte {
 	indexLists := make([][]byte, len(wordLists))
 	for i, wordList := range wordLists {
 		indexList := getIndexList(wordList)
 		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
-		// bytes := bits.ReverseBitsBigEndian(indexList[1:len(indexList)-1], 8, 10)
 		bytes := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
-		// if len(bytes) > 7 {
-		// 	extra := bytes[len(bytes)-1]
-		// 	bytes = bytes[:len(bytes)-1]
-		// 	bytes[len(bytes)-1] += extra
-		// }
-		// postBytes := bits.ReverseBitsBigEndian(indexList[len(indexList)-1:], 8, 10)
 		combined := append(preBytes, bytes...)
-		// combined[len(combined)-1] += postBytes[0]
 		indexLists[i] = combined
 	}
 	return indexLists

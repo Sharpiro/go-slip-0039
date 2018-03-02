@@ -11,7 +11,7 @@ import (
 func CreateWordShares(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(n, k, checksummedSecret)
-	formattedShares := createFormattedShares(xValues, yValues)
+	formattedShares := createFormattedShares(xValues, yValues, k)
 	wordLists := getWordLists(formattedShares)
 	return wordLists
 }
@@ -23,6 +23,13 @@ func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
 	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
 	return secret
+}
+
+// AnalyzeShare returns useful data about a given share
+func AnalyzeShare(share []string) (index, threshold, length int) {
+	indexByte, thresholdByte := AnalyzeFirstWord(share[0])
+	length = len(share[0]) >> 1
+	return int(indexByte), int(thresholdByte), length
 }
 
 func createShares(n, k uint, secret []byte) ([]uint, [][]byte) {
@@ -99,11 +106,11 @@ func recoverFromFormattedShare(shareBlock [][]byte) ([]uint, [][]byte) {
 	return xValues, yValues
 }
 
-func createFormattedShares(xValues []uint, yValues [][]byte) [][]byte {
+func createFormattedShares(xValues []uint, yValues [][]byte, k uint) [][]byte {
 	shares := make([][]byte, len(xValues))
 	for i := 0; i < len(xValues); i++ {
 		index := xValues[i] - 1
-		threshold := len(xValues) - 1
+		threshold := k - 1
 		sssPart := yValues[i]
 		concatLen := len(sssPart) + 1 + 1 + 2
 		concat := make([]byte, 0, concatLen)
