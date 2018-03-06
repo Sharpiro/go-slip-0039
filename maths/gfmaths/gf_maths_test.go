@@ -21,30 +21,30 @@ func TestSubtract(tester *testing.T) {
 }
 
 func TestMultiplyOne(tester *testing.T) {
-	var p uint = 355
+	IrreduciblePolynomial = 355
 	var a uint = 84
 	var b uint = 13
 	var expected uint = 1
-	actual := Multiply(a, b, p)
+	actual := Multiply(a, b)
 	if expected != actual {
 		tester.Errorf("expected %v, actual %v", expected, actual)
 	}
-	actual = Multiply(b, a, p)
+	actual = Multiply(b, a)
 	if expected != actual {
 		tester.Errorf("expected %v, actual %v", expected, actual)
 	}
 }
 
 func TestMultiplyTwo(tester *testing.T) {
-	var p uint = 0x11b
+	IrreduciblePolynomial = 0x11b
 	var a uint = 83
 	var b uint = 202
 	var expected uint = 1
-	actual := Multiply(a, b, p)
+	actual := Multiply(a, b)
 	if expected != actual {
 		tester.Errorf("expected %v, actual %v", expected, actual)
 	}
-	actual = Multiply(b, a, p)
+	actual = Multiply(b, a)
 	if expected != actual {
 		tester.Errorf("expected %v, actual %v", expected, actual)
 	}
@@ -113,16 +113,16 @@ func TestDividePolynomialsTwo(tester *testing.T) {
 func TestInverse(tester *testing.T) {
 	var b uint = 202
 	var a uint = 83
-	var p uint = 0x11b
-	mult := Multiply(a, b, p)
+	IrreduciblePolynomial = 0x11b
+	mult := Multiply(a, b)
 	if mult != 1 {
 		tester.Error()
 	}
-	inverse := Inverse(a, p)
+	inverse := Inverse(a)
 	if inverse != b {
 		tester.Error()
 	}
-	inverse = Inverse(b, p)
+	inverse = Inverse(b)
 	if inverse != a {
 		tester.Error()
 	}
@@ -131,23 +131,23 @@ func TestInverse(tester *testing.T) {
 func TestInverseTwo(tester *testing.T) {
 	var b uint = 13
 	var a uint = 84
-	var p uint = 355
-	mult := Multiply(a, b, p)
+	IrreduciblePolynomial = 355
+	mult := Multiply(a, b)
 	if mult != 1 {
 		tester.Error()
 	}
-	inverse := Inverse(a, p)
+	inverse := Inverse(a)
 	if inverse != b {
 		tester.Error()
 	}
-	inverse = Inverse(b, p)
+	inverse = Inverse(b)
 	if inverse != a {
 		tester.Error()
 	}
 }
 
 func TestInverseOfOne(tester *testing.T) {
-	if Inverse(1, 0x11b) != 1 {
+	if Inverse(1) != 1 {
 		tester.Error("inverse of 1 should be 1")
 	}
 }

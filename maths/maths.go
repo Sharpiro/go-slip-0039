@@ -4,10 +4,9 @@ import (
 	"crypto/rand"
 	"log"
 
-	gfArith "go-slip-0039/maths/gfmaths"
+	// gfArith "go-slip-0039/maths/gfmaths"
+	gfArith "go-slip-0039/maths/gflogmaths"
 )
-
-const prime uint = 0x11b
 
 // LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
 func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
@@ -21,11 +20,10 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 			}
 			numerator := gfArith.Subtract(xInput, xValues[j])
 			denominator := gfArith.Subtract(xValues[i], xValues[j])
-			denomInverse := gfArith.Inverse(denominator, prime)
-			newLi := gfArith.Multiply(numerator, denomInverse, prime)
-			li = gfArith.Multiply(li, newLi, prime)
+			newLi := gfArith.Divide(numerator, denominator)
+			li = gfArith.Multiply(li, newLi)
 		}
-		l := gfArith.Multiply(li, yi, prime)
+		l := gfArith.Multiply(li, yi)
 		y = gfArith.Add(y, l)
 	}
 	return y
@@ -46,7 +44,7 @@ func CreateRandomPolynomial(degree uint) []byte {
 func EvaluatePolynomial(polynomial []byte, x uint) uint {
 	var result uint
 	for i := len(polynomial) - 1; i >= 0; i-- {
-		product := gfArith.Multiply(result, x, prime)
+		product := gfArith.Multiply(result, x)
 		result = gfArith.Add(product, uint(polynomial[i]))
 	}
 	return result

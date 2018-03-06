@@ -31,43 +31,42 @@ func TestSecretSharing(tester *testing.T) {
 	}
 }
 
-func TestSecretSharingWords(tester *testing.T) {
-	// actualSecret := []byte("doggg")
-	// actualSecret := []byte{1}
-	// actualSecret := []byte{1, 1, 1}
-	// formattedShares := [][]byte{[]byte{0, 5, 43, 82, 115, 166, 120}}
-	// wordLists := getWordLists(formattedShares)
-	// indexLists := getIndexLists(wordLists)
+// func TestSecretSharingWords(tester *testing.T) {
+// 	// actualSecret := []byte("doggg")
+// 	// actualSecret := []byte{1}
+// 	// actualSecret := []byte{1, 1, 1}
+// 	// formattedShares := [][]byte{[]byte{0, 5, 43, 82, 115, 166, 120}}
+// 	// wordLists := getWordLists(formattedShares)
+// 	// indexLists := getIndexLists(wordLists)
 
-	for j := 0; j < 10; j++ {
-		for i := 4; i < 64; i++ {
-			byteLength := i + 1
-			createdBitLength := (byteLength + 2 + 2) << 3
-			actualSecret := make([]byte, byteLength)
-			cryptoRandom.Read(actualSecret)
-			wordShares := CreateWordShares(6, 3, actualSecret)
-			// recoveredBitLength := int(math.Ceil(float64(len(wordShares[0]))*10/8)-2) * 8
-			// recoveredBitLengthFloat := ((float64(len(wordShares[0])) * 10 / 8) - 2) * 8
-			// recoveredBitLength := int(recoveredBitLengthFloat)
+// 	for j := 0; j < 10; j++ {
+// 		for i := 5; i < 64; i++ {
+// 			byteLength := i + 1
+// 			createdBitLength := (byteLength + 2 + 2) << 3
+// 			actualSecret := make([]byte, byteLength)
+// 			cryptoRandom.Read(actualSecret)
+// 			wordShares := CreateWordShares(6, 3, actualSecret)
+// 			recoveredBitLengthFloat := ((float64(len(wordShares[0])) * 10 / 8) - 2) * 8
+// 			recoveredBitLength := int(recoveredBitLengthFloat)
 
-			// if createdBitLength != recoveredBitLength {
-			// 	log.Fatal("there was a mismatch between created bit length and recovered bit length")
-			// }
-			expectedSecret := RecoverFromWordShares(wordShares, createdBitLength)
+// 			if createdBitLength != recoveredBitLength {
+// 				log.Fatal("there was a mismatch between created bit length and recovered bit length")
+// 			}
+// 			expectedSecret := RecoverFromWordShares(wordShares, createdBitLength)
 
-			// fmt.Println(wordShares)
-			// fmt.Println(formattedShares[0])
-			// fmt.Println(indexLists[0])
-			// fmt.Println(len(actualSecret))
-			// fmt.Println(len(expectedSecret))
-			// fmt.Println(actualSecret)
-			// fmt.Println(expectedSecret)
-			if !bytes.Equal(actualSecret, expectedSecret) {
-				tester.Error("secrets do not match")
-			}
-		}
-	}
-}
+// 			// fmt.Println(wordShares)
+// 			// fmt.Println(formattedShares[0])
+// 			// fmt.Println(indexLists[0])
+// 			// fmt.Println(len(actualSecret))
+// 			// fmt.Println(len(expectedSecret))
+// 			// fmt.Println(actualSecret)
+// 			// fmt.Println(expectedSecret)
+// 			if !bytes.Equal(actualSecret, expectedSecret) {
+// 				tester.Error("secrets do not match")
+// 			}
+// 		}
+// 	}
+// }
 
 func TestShareFormatting(tester *testing.T) {
 	secretBytes := make([]byte, 32)

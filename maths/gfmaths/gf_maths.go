@@ -4,6 +4,9 @@ import (
 	"math"
 )
 
+// IrreduciblePolynomial is the polynomial used for the GF arithmetic
+var IrreduciblePolynomial uint = 0x11b
+
 type ecdTableEntry struct {
 	quotient  uint
 	auxillary uint
@@ -20,7 +23,7 @@ func Subtract(a, b uint) uint {
 }
 
 // Multiply 2 numbers reduced by a polynomial
-func Multiply(a, b, poly uint) uint {
+func Multiply(a, b uint) uint {
 	var z uint
 	for a > 0 {
 		if a&1 == 1 {
@@ -29,7 +32,7 @@ func Multiply(a, b, poly uint) uint {
 		a >>= 1
 		b <<= 1
 		if b&0x100 != 0 { // if b >= 256
-			b ^= poly
+			b ^= IrreduciblePolynomial
 		}
 	}
 	return z
@@ -64,11 +67,11 @@ func DividePolynomials(dividend, divisor uint) (uint, uint) {
 }
 
 // Inverse gets the inverse of a number given a polynomial
-func Inverse(a, p uint) uint {
+func Inverse(a uint) uint {
 	n := 2
 	quotientAuxillary := []ecdTableEntry{ecdTableEntry{0, 0}, ecdTableEntry{0, 1}}
 	remainder := a
-	dividend := p
+	dividend := IrreduciblePolynomial
 	divisor := a
 	var newAux uint = 1
 	var quotient uint
@@ -77,7 +80,7 @@ func Inverse(a, p uint) uint {
 		quotient, remainder = DividePolynomials(dividend, divisor)
 		twoOldAux := quotientAuxillary[n-2].auxillary
 		oneOldAux := quotientAuxillary[n-1].auxillary
-		newAux = Add(twoOldAux, Multiply(oneOldAux, quotient, p))
+		newAux = Add(twoOldAux, Multiply(oneOldAux, quotient))
 
 		quotientAuxillary = append(quotientAuxillary, ecdTableEntry{quotient, newAux})
 		dividend = divisor
@@ -85,6 +88,12 @@ func Inverse(a, p uint) uint {
 		n++
 	}
 	return newAux
+}
+
+// Divide performs a * 1/b
+func Divide(a, b uint) uint {
+	inverseB := Inverse(b)
+	return Multiply(a, inverseB)
 }
 
 func getBitAtPosition(number, position uint) uint {

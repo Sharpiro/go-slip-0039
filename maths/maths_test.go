@@ -25,12 +25,11 @@ func TestCreateRandomPolynomial(tester *testing.T) {
 func TestEvaluatePolynomial(tester *testing.T) {
 	bytePolynomial := []byte{123, 166, 94}
 	polynomial := []uint{123, 166, 94}
-	var prime uint = 0x11b
 
 	for x := uint(0); x < 7; x++ {
-		temp1 := gfArith.Multiply(x, x, prime)
-		temp2 := gfArith.Multiply(temp1, polynomial[2], prime)
-		temp3 := gfArith.Multiply(polynomial[1], x, prime)
+		temp1 := gfArith.Multiply(x, x)
+		temp2 := gfArith.Multiply(temp1, polynomial[2])
+		temp3 := gfArith.Multiply(polynomial[1], x)
 		temp4 := gfArith.Add(temp2, temp3)
 		expected := gfArith.Add(temp4, polynomial[0])
 
