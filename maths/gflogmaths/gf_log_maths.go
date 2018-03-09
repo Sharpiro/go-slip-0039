@@ -3,7 +3,7 @@ package gflogmaths
 import "go-slip-0039/maths/gfmaths"
 
 // var exp, log []uint = newField(3)
-var exp, log []uint = ExponentTable, LogTable
+var exp, log []uint = exponentTable, logTable
 
 // Add 2 items
 func Add(a, b uint) uint {

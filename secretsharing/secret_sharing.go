@@ -108,11 +108,11 @@ func recoverFromFormattedShare(shareBlock [][]byte) ([]uint, [][]byte) {
 
 func createFormattedShares(xValues []uint, yValues [][]byte, k uint) [][]byte {
 	shares := make([][]byte, len(xValues))
+	concatLen := len(yValues[0]) + 1 + 1 + 2
 	for i := 0; i < len(xValues); i++ {
 		index := xValues[i] - 1
 		threshold := k - 1
 		sssPart := yValues[i]
-		concatLen := len(sssPart) + 1 + 1 + 2
 		concat := make([]byte, 0, concatLen)
 		concat = append(concat, byte(index), byte(threshold))
 		concat = append(concat, sssPart...)
@@ -134,7 +134,7 @@ func getSecret(csSecret []byte) []byte {
 	data := csSecret[:len(csSecret)-2]
 	actualChecksum := cryptos.GetSha256(data)
 	if !bytes.Equal(expectedChecksum, actualChecksum[:2]) {
-		log.Fatal("checksums do not match")
+		log.Fatal("actual master secret checksum did not match expected checksum")
 	}
 	secret := csSecret[:len(csSecret)-2]
 	return secret

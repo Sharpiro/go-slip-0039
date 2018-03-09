@@ -8,6 +8,7 @@ import (
 	"go-slip-0039/secretsharing"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -26,9 +27,16 @@ func main() {
 			Usage:   "create secret shares",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "secret",
-					Value: "fffaac234dac4dacfffaac234dac4dacfffaac234dac4dacfffaac234dac4dac",
-					Usage: "the master secret",
+					Name:  "secrethex, s",
+					Usage: "the master secret in valid hex format",
+				},
+				cli.StringFlag{
+					Name:  "n",
+					Usage: "total number of shares",
+				},
+				cli.StringFlag{
+					Name:  "k",
+					Usage: "total number of shares needed to re-create secret",
 				},
 			},
 			Action: create,
@@ -39,17 +47,16 @@ func main() {
 			Usage:   "recover secret shares",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "protected",
-					Usage: "hide console input",
+					Name:  "protected, p",
+					Usage: "optionally hide console input for word shares",
 				},
 				cli.StringFlag{
-					Name:  "passphrase",
+					Name:  "passphrase, pp",
 					Value: "",
 					Usage: "an optional passphrase for generating a seed",
 				},
 				cli.IntFlag{
-					Name:  "size",
-					Value: 256,
+					Name:  "size, s",
 					Usage: "the size in bits of the master secret",
 				},
 			},
@@ -63,22 +70,35 @@ func main() {
 }
 
 func create(context *cli.Context) {
-	// secretBytes := []byte(*secretPtr)
-	secret := context.String("secret")
-	secretBytes, err := hex.DecodeString(secret)
+	n, err := strconv.Atoi(context.String("n"))
+	if err != nil || n < 2 {
+		log.Fatal("n must be a number greater than or equal to 2")
+	}
+	k, err := strconv.Atoi(context.String("k"))
+	if err != nil || k < 2 || k > n {
+		log.Fatal("k must be greater than or equal to 2 and less than or equal to n")
+	}
+	secretHex := context.String("secrethex")
+	if secretHex == "" {
+		log.Fatalf("must provide a secret in valid hex form")
+	}
+	secretBytes, err := hex.DecodeString(secretHex)
 	if err != nil {
 		log.Fatal("an error occurred decoding the hex string to bytes")
 	}
-	shares := secretsharing.CreateWordShares(3, 2, secretBytes)
+	shares := secretsharing.CreateWordShares(uint(n), uint(k), secretBytes)
 
-	fmt.Printf("secret: %v\n", secret)
+	fmt.Printf("secret: %v\n", secretHex)
 	fmt.Println(shares)
 }
 
 func recover(context *cli.Context) {
-	protected := context.Bool("protected")
 	secretSizeBits := context.Int("size")
-	shares := readShares(protected, secretSizeBits)
+	if secretSizeBits < 1 {
+		log.Fatal("must provide size in bits of master secert to be recovered")
+	}
+	protected := context.Bool("protected")
+	shares := readShares(protected)
 	passPhrase := context.String("passphrase")
 
 	// totalBitLength := (len(secretBytes) + 4) << 3
@@ -88,34 +108,31 @@ func recover(context *cli.Context) {
 	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
 	generatedSeedHex := hex.EncodeToString(generatedSeed)
 
-	fmt.Printf("passphrase: %v\n", passPhrase)
 	fmt.Printf("recovered secret: %v\n", recoveredSecret)
-	fmt.Printf("seed: %v\n", generatedSeedHex)
+	fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
-func readShares(protected bool, secretSizeBits int) [][]string {
+func readShares(protected bool) [][]string {
 	var wordLists [][]string
 	reader := bufio.NewReader(os.Stdin)
 
-	firstShare := readShare(reader, protected, 1)
+	fmt.Println("please enter first share:")
+	firstShare := readShare(reader, protected)
 
 	wordLists = append(wordLists, firstShare)
 	index, threshold, _ := secretsharing.AnalyzeShare(firstShare)
-	// fmt.Println(firstShare)
-	fmt.Println("index: ", index)
-	fmt.Println("threshold: ", threshold)
-	fmt.Println("length: ", secretSizeBits)
+	fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
 
 	for i := 1; i < threshold; i++ {
-		share := readShare(reader, protected, i+1)
+		fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
+		share := readShare(reader, protected)
 		wordLists = append(wordLists, share)
 	}
 	return wordLists
 }
 
-func readShare(reader *bufio.Reader, protected bool, shareNumber int) []string {
+func readShare(reader *bufio.Reader, protected bool) []string {
 	var data string
-	fmt.Printf("please enter share %v:\n", shareNumber)
 	if protected {
 		dataBytes, err := terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
