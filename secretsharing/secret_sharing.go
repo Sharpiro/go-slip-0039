@@ -12,13 +12,13 @@ func CreateWordShares(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(n, k, checksummedSecret)
 	formattedShares := createFormattedShares(xValues, yValues, k)
-	wordLists := getWordLists(formattedShares)
+	wordLists := getMnemonicList(formattedShares)
 	return wordLists
 }
 
 // RecoverFromWordShares recovers a secret based off of K supplied word lists
 func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
-	formattedShares := getIndexLists(wordLists, bitLength)
+	formattedShares := getMnemonicBuffers(wordLists, bitLength)
 	xValues, yValues := recoverFromFormattedShare(formattedShares)
 	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
@@ -26,10 +26,12 @@ func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
 }
 
 // AnalyzeShare returns useful data about a given share
-func AnalyzeShare(share []string) (index, threshold, length int) {
-	indexByte, thresholdByte := AnalyzeFirstWord(share[0])
-	length = len(share[0]) >> 1
-	return int(indexByte), int(thresholdByte), length
+func AnalyzeShare(share []string, bitLength int) (index, threshold, length int) {
+	index, threshold = AnalyzeFirstWord(share[0])
+	mnemonicIndexes := getMnemonicIndexes(share)
+	_ = getMnemonicBuffer(mnemonicIndexes, bitLength)
+	length = len(share[0]) >> 1 // todo: what is this again??
+	return index, threshold, length
 }
 
 func createShares(n, k uint, secret []byte) ([]uint, [][]byte) {
@@ -92,12 +94,12 @@ func recoverFromFormattedShare(shareBlock [][]byte) ([]uint, [][]byte) {
 	xValues := make([]uint, len(shareBlock))
 	yValues := make([][]byte, len(shareBlock))
 	for i := 0; i < len(shareBlock); i++ {
-		expectedChecksum := shareBlock[i][len(shareBlock[i])-2:]
-		actualData := shareBlock[i][:len(shareBlock[i])-2]
-		actualChecksum := cryptos.GetSha256(actualData)[:2]
-		if !bytes.Equal(expectedChecksum, actualChecksum) {
-			log.Fatal("failed while recovering share, expected checksum does not match actual")
-		}
+		// expectedChecksum := shareBlock[i][len(shareBlock[i])-2:]
+		// actualData := shareBlock[i][:len(shareBlock[i])-2]
+		// actualChecksum := cryptos.GetSha256(actualData)[:2]
+		// if !bytes.Equal(expectedChecksum, actualChecksum) {
+		// 	log.Fatal("failed while recovering share, expected checksum does not match actual")
+		// }
 		index := uint(shareBlock[i][0] + encodingOffset)
 		sssPart := shareBlock[i][2 : len(shareBlock[i])-2]
 		xValues[i] = index
@@ -136,6 +138,5 @@ func getSecret(csSecret []byte) []byte {
 	if !bytes.Equal(expectedChecksum, actualChecksum[:2]) {
 		log.Fatal("actual master secret checksum did not match expected checksum")
 	}
-	secret := csSecret[:len(csSecret)-2]
-	return secret
+	return data
 }

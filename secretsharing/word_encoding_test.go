@@ -1,9 +1,28 @@
 package secretsharing
 
 import (
+	"bytes"
 	cryptoRandom "crypto/rand"
+	"strings"
 	"testing"
 )
+
+func TestGetMnemonicBuffer(tester *testing.T) {
+	words := strings.Split("acid inmate pink program cousin crew", " ")
+	indexList := getMnemonicIndexes(words)
+	actualBuffer := getMnemonicBuffer(indexList, 16+32)
+	expectedBuffer := []byte{0, 1, 116, 41, 58, 180, 175, 46}
+	if !bytes.Equal(actualBuffer, expectedBuffer) {
+		tester.Error("buffers do not match")
+	}
+}
+
+func TestGetMnemonicBufferjakubtrnka(tester *testing.T) {
+	// words := strings.Split("acoustic exclude genius lucky quarter fuel picnic school", " ")
+	words := strings.Split("catch lemon often despair resist response hour lemon", " ")
+	indexList := getMnemonicIndexes(words)
+	getMnemonicBuffer(indexList, 32+32)
+}
 
 func TestShareIndexAndThreshold(tester *testing.T) {
 	randomLength := 32
@@ -33,7 +52,7 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 
 func TestGetWordList(tester *testing.T) {
 	indexList := []uint{102, 20, 175, 1009, 3}
-	wordList := getWordList(indexList)
+	wordList := getMnemonic(indexList)
 
 	// fmt.Println(wordList)
 
@@ -56,7 +75,7 @@ func TestGetWordList(tester *testing.T) {
 
 func TestGetIndexList(tester *testing.T) {
 	wordList := []string{"bridge", "alcohol", "cousin", "winter", "actor"}
-	indexList := getIndexList(wordList)
+	indexList := getMnemonicIndexes(wordList)
 
 	// fmt.Println(indexList)
 

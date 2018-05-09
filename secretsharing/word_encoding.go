@@ -1,25 +1,26 @@
 package secretsharing
 
 import (
-	"log"
-
+	"bytes"
+	"go-slip-0039/cryptos"
 	"go-slip-0039/maths/bits"
+	"log"
 )
 
-func getWordLists(formattedShares [][]byte) [][]string {
+func getMnemonicList(formattedShares [][]byte) [][]string {
 	wordLists := make([][]string, len(formattedShares))
 	for i := range wordLists {
 		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
 		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
 		combined := append(first, second...)
-		wordLists[i] = getWordList(combined)
+		wordLists[i] = getMnemonic(combined)
 	}
 	return wordLists
 }
 
-func getWordList(combined []uint) []string {
-	words := make([]string, len(combined))
-	for i, v := range combined {
+func getMnemonic(mnemonicIndexes []uint) []string {
+	words := make([]string, len(mnemonicIndexes))
+	for i, v := range mnemonicIndexes {
 		if v&1024 != 0 {
 			log.Fatal("word index must be less than 1024")
 		}
@@ -29,17 +30,17 @@ func getWordList(combined []uint) []string {
 }
 
 // AnalyzeFirstWord analyzes the first word of a share to provide data about the share
-func AnalyzeFirstWord(firstWord string) (index byte, threshold byte) {
-	indexList := getIndexList([]string{firstWord})
+func AnalyzeFirstWord(firstWord string) (index int, threshold int) {
+	indexList := getMnemonicIndexes([]string{firstWord})
 	preBytes := bits.ReverseBitsBigEndian(indexList, 5, 10, 16)
 	if len(preBytes) != 2 {
 		log.Fatalf("Failed analyzing first word, expected 2 bytes, but was %v", len(preBytes))
 	}
-	return preBytes[0] + 1, preBytes[1] + 1
+	return int(preBytes[0] + 1), int(preBytes[1] + 1)
 }
 
-func getIndexLists(wordLists [][]string, bitLength int) [][]byte {
-	indexLists := make([][]byte, len(wordLists))
+func getMnemonicBuffers(wordLists [][]string, bitLength int) [][]byte {
+	mnemonicBuffers := make([][]byte, len(wordLists))
 	dupeIndexVerifier := make(map[string]bool, len(wordLists))
 
 	for i, wordList := range wordLists {
@@ -47,16 +48,26 @@ func getIndexLists(wordLists [][]string, bitLength int) [][]byte {
 			log.Fatal("Two shares had identical indexes, each share must have a unique index")
 		}
 		dupeIndexVerifier[wordList[0]] = true
-		indexList := getIndexList(wordList)
-		preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
-		bytes := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
-		combined := append(preBytes, bytes...)
-		indexLists[i] = combined
+		mnemonicIndexes := getMnemonicIndexes(wordList)
+		mnemonicBuffer := getMnemonicBuffer(mnemonicIndexes, bitLength)
+		mnemonicBuffers[i] = mnemonicBuffer
 	}
-	return indexLists
+	return mnemonicBuffers
 }
 
-func getIndexList(words []string) []uint {
+func getMnemonicBuffer(indexList []uint, bitLength int) []byte {
+	preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
+	data := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
+	combined := append(preBytes, data...)
+	expectedChecksum := combined[len(combined)-2:]
+	actualChecksum := cryptos.GetSha256(combined[:len(combined)-2])[:2]
+	if !bytes.Equal(expectedChecksum, actualChecksum) {
+		log.Fatal("invalid share checksum")
+	}
+	return combined
+}
+
+func getMnemonicIndexes(words []string) []uint {
 	indexes := make([]uint, len(words))
 	for i, v := range words {
 		if val, exists := wordMap[v]; exists {

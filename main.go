@@ -97,12 +97,12 @@ func recover(context *cli.Context) {
 	if secretSizeBits < 1 {
 		log.Fatal("must provide size in bits of master secert to be recovered")
 	}
+	totalBitLength := secretSizeBits + 32
 	protected := context.Bool("protected")
-	shares := readShares(protected)
+	shares := readShares(protected, totalBitLength)
 	passPhrase := context.String("passphrase")
 
 	// totalBitLength := (len(secretBytes) + 4) << 3
-	totalBitLength := secretSizeBits + 32
 	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares, totalBitLength)
 	recoveredSecret := hex.EncodeToString(recoveredSecretBytes)
 	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
@@ -112,7 +112,7 @@ func recover(context *cli.Context) {
 	fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
-func readShares(protected bool) [][]string {
+func readShares(protected bool, bitLength int) [][]string {
 	var wordLists [][]string
 	reader := bufio.NewReader(os.Stdin)
 
@@ -120,12 +120,13 @@ func readShares(protected bool) [][]string {
 	firstShare := readShare(reader, protected)
 
 	wordLists = append(wordLists, firstShare)
-	index, threshold, _ := secretsharing.AnalyzeShare(firstShare)
+	index, threshold, _ := secretsharing.AnalyzeShare(firstShare, bitLength)
 	fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
 
 	for i := 1; i < threshold; i++ {
 		fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
 		share := readShare(reader, protected)
+		secretsharing.AnalyzeShare(share, bitLength)
 		wordLists = append(wordLists, share)
 	}
 	return wordLists
