@@ -57,14 +57,17 @@ func getMnemonicBuffers(wordLists [][]string, bitLength int) [][]byte {
 
 func getMnemonicBuffer(indexList []uint, bitLength int) []byte {
 	preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
-	data := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
+	dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
+	data := dataWithChecksum[:len(dataWithChecksum)-2]
 	combined := append(preBytes, data...)
-	expectedChecksum := combined[len(combined)-2:]
-	actualChecksum := cryptos.GetSha256(combined[:len(combined)-2])[:2]
+	expectedChecksum := dataWithChecksum[len(combined)-2:]
+	actualChecksum := cryptos.GetSha256(combined)[:2]
 	if !bytes.Equal(expectedChecksum, actualChecksum) {
 		log.Fatal("invalid share checksum")
 	}
-	return combined
+	final := append(preBytes, data...)
+	final = append(final, expectedChecksum...)
+	return final
 }
 
 func getMnemonicIndexes(words []string) []uint {
