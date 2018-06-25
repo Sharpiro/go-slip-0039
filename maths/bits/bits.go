@@ -1,5 +1,78 @@
 package bits
 
+import "log"
+
+// Power2ToHex  Converts vector of integers representing number base 2^p to a byte-vector
+// with complexity O( vector.size() )
+// power of 2 in a base must be 9 >= x <= 24
+func Power2ToHex(indexes []uint, power uint) []byte {
+	if power < 9 || power > 24 {
+		log.Fatal("base 2-power must be 9 >= x <= 24")
+	}
+	output := make([]byte, 0)
+	var appended uint
+	for _, v := range indexes {
+		lastleft := (8 - appended%8) % 8
+		toappend := power
+		if lastleft != 0 {
+			output[len(output)-1] |= byte(v >> (power - lastleft))
+			toappend -= lastleft
+			appended += lastleft
+		}
+		for toappend >= 8 {
+			output = append(output, byte(v>>(toappend-8)))
+			toappend -= 8
+			appended += 8
+		}
+		if toappend != 0 {
+			output = append(output, byte(v<<(8-toappend)))
+			appended += toappend
+		}
+	}
+	return output
+}
+
+// HexToPower2  Converts vector of bytes into array of integers representing number base 2^p
+// with complexity O( vector.size() )
+// power of 2 in a base must be 9 >= x <= 24
+func HexToPower2(data []byte, p uint) []uint {
+	if p < 9 || p > 24 {
+		log.Fatal("base 2-power must be 9 >= x <= 24")
+	}
+	output := make([]uint, 0)
+	var bitholder uint
+	var bitsread uint
+	for _, x := range data {
+		var willread uint
+		if willread = 8; (p - bitsread) <= 8 {
+			willread = p - bitsread
+		}
+		bitholder <<= willread
+		bitholder |= uint((x >> (8 - willread)))
+		bitsread += willread
+		if bitsread == p {
+			output = append(output, bitholder)
+			bitholder = uint(x & (0xff >> (willread)))
+			bitsread = 8 - willread
+		}
+	}
+	last := bitholder << (p - bitsread)
+	output = append(output, last)
+	return output
+}
+
+// ResizeWordIndex resizes a base 1024 array based upon the original entropy size
+func ResizeWordIndex(data []uint, entropySizeBytes int) []uint {
+	lineBits := (entropySizeBytes*8 + 42)
+	var xyz int
+	if xyz = 0; lineBits%10 != 0 {
+		xyz = 1
+	}
+	newSize := lineBits/10 + xyz
+	data = data[:newSize]
+	return data
+}
+
 // ReverseBitsBigEndian returns a byte array
 func ReverseBitsBigEndian(indexes []uint, byteSize, splitSize, totalBits int) []byte {
 	createdBytes := make([]byte, 0, len(indexes))

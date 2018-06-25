@@ -56,6 +56,11 @@ func getMnemonicBuffers(wordLists [][]string, bitLength int) [][]byte {
 }
 
 func getMnemonicBuffer(indexList []uint, bitLength int) []byte {
+	tempAll := bits.ReverseBitsBigEndian(indexList, 8, 10, 64+16)
+	tempRebuild := bits.GetBitBlocksBigEndian(tempAll, 8, 10)
+
+	_ = tempAll
+	_ = tempRebuild
 	preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
 	dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
 	data := dataWithChecksum[:len(dataWithChecksum)-2]

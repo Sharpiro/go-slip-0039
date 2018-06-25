@@ -19,9 +19,12 @@ func TestGetMnemonicBuffer(tester *testing.T) {
 
 func TestGetMnemonicBufferjakubtrnka(tester *testing.T) {
 	// words := strings.Split("acoustic exclude genius lucky quarter fuel picnic school", " ")
-	words := strings.Split("catch lemon often despair resist response hour lemon", " ")
-	indexList := getMnemonicIndexes(words)
-	getMnemonicBuffer(indexList, 32+32)
+	// words := strings.Split("catch lemon often despair resist response hour lemon", " ")
+	// indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
+	// words := strings.Split("acid glance scatter multiply muscle evolve vote hedgehog vanish shoe road sense ugly raise sister scout educate", " ")
+	// indexList := getMnemonicIndexes(words)
+	// _ = indexList
+	// getMnemonicBuffer(indexList, 32+32)
 }
 
 func TestShareIndexAndThreshold(tester *testing.T) {
