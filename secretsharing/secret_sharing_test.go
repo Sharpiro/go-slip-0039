@@ -13,6 +13,15 @@ import (
 
 var _tester *testing.T
 
+func TestGetMnemonicList(tester *testing.T) {
+	secret := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	checksummedSecret := getChecksummedSecret(secret)
+	xValues, yValues := createShares(3, 2, checksummedSecret)
+	formattedShares := createFormattedShares(xValues, yValues, 2)
+	list := getMnemonicList(formattedShares, len(secret))
+	_ = list
+}
+
 func TestSecretSharing(tester *testing.T) {
 	_tester = tester
 	mathRandom.Seed(time.Now().UTC().UnixNano())

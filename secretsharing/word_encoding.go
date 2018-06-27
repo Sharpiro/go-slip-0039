@@ -7,13 +7,19 @@ import (
 	"log"
 )
 
-func getMnemonicList(formattedShares [][]byte) [][]string {
+func getMnemonicList(formattedShares [][]byte, secretByteSize int) [][]string {
 	wordLists := make([][]string, len(formattedShares))
 	for i := range wordLists {
-		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
-		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
-		combined := append(first, second...)
-		wordLists[i] = getMnemonic(combined)
+		// first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
+		// second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
+		// combined := append(first, second...)
+		combined := bits.HexToPower2(formattedShares[i], 10)
+		resized := bits.ResizeWordIndex(combined, secretByteSize)
+		andBack := bits.Power2ToHex(combined, 10)
+		andBackResized := bits.Power2ToHex(resized, 10)
+		_ = andBack
+		_ = andBackResized
+		wordLists[i] = getMnemonic(resized)
 	}
 	return wordLists
 }
@@ -39,7 +45,7 @@ func AnalyzeFirstWord(firstWord string) (index int, threshold int) {
 	return int(preBytes[0] + 1), int(preBytes[1] + 1)
 }
 
-func getMnemonicBuffers(wordLists [][]string, bitLength int) [][]byte {
+func getMnemonicBuffers(wordLists [][]string, entorpySizeBytes int) [][]byte {
 	mnemonicBuffers := make([][]byte, len(wordLists))
 	dupeIndexVerifier := make(map[string]bool, len(wordLists))
 
@@ -49,29 +55,28 @@ func getMnemonicBuffers(wordLists [][]string, bitLength int) [][]byte {
 		}
 		dupeIndexVerifier[wordList[0]] = true
 		mnemonicIndexes := getMnemonicIndexes(wordList)
-		mnemonicBuffer := getMnemonicBuffer(mnemonicIndexes, bitLength)
+		mnemonicBuffer := getMnemonicBuffer(mnemonicIndexes, entorpySizeBytes)
 		mnemonicBuffers[i] = mnemonicBuffer
 	}
 	return mnemonicBuffers
 }
 
-func getMnemonicBuffer(indexList []uint, bitLength int) []byte {
-	tempAll := bits.ReverseBitsBigEndian(indexList, 8, 10, 64+16)
-	tempRebuild := bits.GetBitBlocksBigEndian(tempAll, 8, 10)
+func getMnemonicBuffer(indexList []uint, entorpySizeBytes int) []byte {
+	// tempRebuild2 := bits.HexToPower2(allBytes, 10)
+	// tempBuild2Resized := bits.ResizeWordIndex(tempRebuild2, entorpySizeBytes)
 
-	_ = tempAll
-	_ = tempRebuild
-	preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
-	dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, bitLength)
-	data := dataWithChecksum[:len(dataWithChecksum)-2]
-	combined := append(preBytes, data...)
-	expectedChecksum := dataWithChecksum[len(combined)-2:]
-	actualChecksum := cryptos.GetSha256(combined)[:2]
+	// _ = tempRebuild2
+	// _ = tempBuild2Resized
+	// preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
+	// dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, entorpySizeBytes*8)
+	allBytes := bits.Power2ToHex(indexList, 10)
+	expectedChecksum := allBytes[len(allBytes)-2:]
+	data := allBytes[:len(allBytes)-2]
+	actualChecksum := cryptos.GetSha256(data)[:2]
 	if !bytes.Equal(expectedChecksum, actualChecksum) {
 		log.Fatal("invalid share checksum")
 	}
-	final := append(preBytes, data...)
-	final = append(final, expectedChecksum...)
+	final := append(data, expectedChecksum...)
 	return final
 }
 

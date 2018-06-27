@@ -12,7 +12,7 @@ func CreateWordShares(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(n, k, checksummedSecret)
 	formattedShares := createFormattedShares(xValues, yValues, k)
-	wordLists := getMnemonicList(formattedShares)
+	wordLists := getMnemonicList(formattedShares, len(secret))
 	return wordLists
 }
 

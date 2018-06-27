@@ -8,9 +8,10 @@ import (
 )
 
 func TestGetMnemonicBuffer(tester *testing.T) {
-	words := strings.Split("acid inmate pink program cousin crew", " ")
+	words := strings.Split("academic amused toast lizard mesh", " ")
 	indexList := getMnemonicIndexes(words)
-	actualBuffer := getMnemonicBuffer(indexList, 16+32)
+	entropySizeBytes := 2
+	actualBuffer := getMnemonicBuffer(indexList, entropySizeBytes)
 	expectedBuffer := []byte{0, 1, 116, 41, 58, 180, 175, 46}
 	if !bytes.Equal(actualBuffer, expectedBuffer) {
 		tester.Error("buffers do not match")
@@ -18,13 +19,14 @@ func TestGetMnemonicBuffer(tester *testing.T) {
 }
 
 func TestGetMnemonicBufferjakubtrnka(tester *testing.T) {
-	// words := strings.Split("acoustic exclude genius lucky quarter fuel picnic school", " ")
-	// words := strings.Split("catch lemon often despair resist response hour lemon", " ")
-	// indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
-	// words := strings.Split("acid glance scatter multiply muscle evolve vote hedgehog vanish shoe road sense ugly raise sister scout educate", " ")
-	// indexList := getMnemonicIndexes(words)
-	// _ = indexList
-	// getMnemonicBuffer(indexList, 32+32)
+	// 	acid glance scatter multiply muscle evolve vote hedgehog vanish shoe road sense ugly raise sister scout educate
+	// anger mansion second exclude grow garden video purchase cost skin crowd surface brush choice machine lock shed
+	// axis clerk cupboard golden endless minute army lecture fuel soldier peace regret deny extra group execute menu
+	hexEntropy := "c9d32bb6f9a2024b9e12c2cd4af717c1"
+	entropySizeBytes := len(hexEntropy) / 2 // 16 bytes | 128 bits
+
+	indexList := []uint{1, 400, 766, 582, 583, 312, 984, 430, 960, 795, 745, 785, 935, 706, 806, 772, 274}
+	getMnemonicBuffer(indexList, entropySizeBytes)
 }
 
 func TestShareIndexAndThreshold(tester *testing.T) {
