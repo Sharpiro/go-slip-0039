@@ -3,7 +3,26 @@ package bits
 import (
 	"log"
 	"math"
+	"strconv"
+	"strings"
 )
+
+func GetBits(x byte, padding int) string {
+	binString := strconv.FormatInt(int64(x), 2)
+	paddedBinary := strings.Repeat("0", padding-len(binString))
+	paddedString := paddedBinary + binString
+	return paddedString
+}
+
+func GetBytes(bits string, size int) *SmartBuffer {
+	bytes := make([]byte, 0)
+	for i := 0; i < len(bits); i += 8 {
+		data := bits[i : i+8]
+		parsed, _ := strconv.ParseInt(data, 2, 64)
+		bytes = append(bytes, byte(parsed))
+	}
+	return &SmartBuffer{buffer: bytes, size: size}
+}
 
 // Power2ToHex  Converts vector of integers representing number base 2^p to a byte-vector
 // with complexity O( vector.size() )

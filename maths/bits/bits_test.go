@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestGetBits(tester *testing.T) {
+	indexList := []byte{11, 10, 5, 4, 97, 219}
+	bitsx := GetBits(indexList[0], 8)
+	_ = bitsx
+}
+
+func TestGetBytes(tester *testing.T) {
+	bits := "0000000001000010110000101000000101000001000110000111011011000000"
+	size := 58
+	bytes := GetBytes(bits, size)
+	_ = bytes
+}
+
 func TestIntToByteConversion(tester *testing.T) {
 	indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
 

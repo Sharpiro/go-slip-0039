@@ -13,15 +13,21 @@ import (
 
 var _tester *testing.T
 
+func TestMakeShare(tester *testing.T) {
+	shamirPart := []byte{11, 10, 5, 4, 97, 219}
+	buffer := makeShare(shamirPart, 0, 1)
+	_ = buffer
+}
+
 func TestGetMnemonicList(tester *testing.T) {
 	secret := []byte{9, 8, 7, 6}
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(3, 2, checksummedSecret)
-	formattedShares := createFormattedShares(xValues, yValues, 2)
-	list := getMnemonicList(formattedShares, len(secret))
+	makeShare(yValues[0], xValues[0], 2)
+	// formattedShares := createFormattedShares(xValues, yValues, 2)
+	// list := getMnemonicList(formattedShares, len(secret))
 
-	buffers := getMnemonicBuffers(list, len(secret))
-	_ = buffers
+	// buffers := getMnemonicBuffers(list, len(secret))
 }
 
 func TestSecretSharing(tester *testing.T) {

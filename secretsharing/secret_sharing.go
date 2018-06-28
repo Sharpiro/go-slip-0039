@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"go-slip-0039/cryptos"
 	"go-slip-0039/maths"
+	"go-slip-0039/maths/bits"
 	"log"
+	"math"
 )
 
 // CreateWordShares creates shares based off a given secret
@@ -125,10 +127,38 @@ func createFormattedShares(xValues []uint, yValues [][]byte, k uint) [][]byte {
 	return shares
 }
 
+func makeShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
+	indexBits := bits.GetBits(byte(index), 5)
+	thresholdBits := bits.GetBits(byte(threshold), 5)
+	testString := ""
+	// test := make([]string, len(shamirPart))
+	for i := 0; i < len(shamirPart); i++ {
+		// test[i] = bits.GetBits(shamirPart[i], 8)
+		testString += bits.GetBits(shamirPart[i], 8)
+	}
+	actualBitsLen := len(shamirPart)*8 + 10
+	expectedPower := math.Ceil(math.Log2(float64(actualBitsLen)))
+	expectedBitsLen := int(math.Pow(2, expectedPower))
+	_ = expectedBitsLen
+	padding := bits.GetBits(0, expectedBitsLen-actualBitsLen)
+	concat := indexBits + thresholdBits + testString + padding
+	concatLen := len(concat)
+	_ = concatLen
+	smartBuffer := bits.GetBytes(concat, actualBitsLen)
+	return smartBuffer
+}
+
 func getChecksummedSecret(secret []byte) []byte {
 	checksum := cryptos.GetSha256(secret)[:2]
 	checksummedSecret := append(secret, checksum...)
 	return checksummedSecret
+}
+
+func getChecksummedSecretSmart(secret bits.SmartBuffer) bits.SmartBuffer {
+	// checksum := cryptos.GetSha256(secret)[:2]
+	// checksummedSecret := append(secret, checksum...)
+	// return checksummedSecret
+	return bits.SmartBuffer{}
 }
 
 func getSecret(csSecret []byte) []byte {
