@@ -1,10 +1,9 @@
 package maths
 
 import (
-	"crypto/rand"
-	"log"
 
 	// gfArith "go-slip-0039/maths/gfmaths"
+	"go-slip-0039/cryptos"
 	gfArith "go-slip-0039/maths/gflogmaths"
 )
 
@@ -31,11 +30,13 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 
 // CreateRandomPolynomial creates a random polynomial of the given degree
 func CreateRandomPolynomial(degree uint) []byte {
-	randomBytes := make([]byte, degree+1, degree+1)
+	randomBytes := cryptos.GetBytes(int(degree) + 1)
+	// randomBytes := make([]byte, degree+1, degree+1)
 	for getPolynomialDegree(randomBytes) != degree {
-		if _, err := rand.Read(randomBytes); err != nil {
-			log.Fatal("an error occurred generating random bytes")
-		}
+		randomBytes = cryptos.GetBytes(int(degree) + 1)
+		// if _, err := rand.Read(randomBytes); err != nil {
+		// 	log.Fatal("an error occurred generating random bytes")
+		// }
 	}
 	return randomBytes
 }

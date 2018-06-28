@@ -1,6 +1,9 @@
 package bits
 
-import "log"
+import (
+	"log"
+	"math"
+)
 
 // Power2ToHex  Converts vector of integers representing number base 2^p to a byte-vector
 // with complexity O( vector.size() )
@@ -71,6 +74,13 @@ func ResizeWordIndex(data []uint, entropySizeBytes int) []uint {
 	newSize := lineBits/10 + xyz
 	data = data[:newSize]
 	return data
+}
+
+// ResizeBytes resizes bytes
+func ResizeBytes(data []byte, entropySizeBytes int) []byte {
+	lineBits := float64(entropySizeBytes*8 + 42)
+	fullByteSize := int(math.Ceil(lineBits / 8))
+	return data[:fullByteSize]
 }
 
 // ReverseBitsBigEndian returns a byte array

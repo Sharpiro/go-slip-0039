@@ -18,7 +18,7 @@ func CreateWordShares(n, k uint, secret []byte) [][]string {
 
 // RecoverFromWordShares recovers a secret based off of K supplied word lists
 func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
-	formattedShares := getMnemonicBuffers(wordLists, bitLength)
+	formattedShares := getMnemonicBuffers(wordLists, bitLength/8)
 	xValues, yValues := recoverFromFormattedShare(formattedShares)
 	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
@@ -29,7 +29,7 @@ func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
 func AnalyzeShare(share []string, bitLength int) (index, threshold, length int) {
 	index, threshold = AnalyzeFirstWord(share[0])
 	mnemonicIndexes := getMnemonicIndexes(share)
-	_ = getMnemonicBuffer(mnemonicIndexes, bitLength)
+	_ = getMnemonicBuffer(mnemonicIndexes, bitLength/8)
 	length = len(share[0]) >> 1 // todo: what is this again??
 	return index, threshold, length
 }

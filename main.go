@@ -97,7 +97,7 @@ func recover(context *cli.Context) {
 	if secretSizeBits < 1 {
 		log.Fatal("must provide size in bits of master secert to be recovered")
 	}
-	totalBitLength := secretSizeBits + 32
+	totalBitLength := secretSizeBits
 	protected := context.Bool("protected")
 	shares := readShares(protected, totalBitLength)
 	passPhrase := context.String("passphrase")
@@ -120,13 +120,13 @@ func readShares(protected bool, bitLength int) [][]string {
 	firstShare := readShare(reader, protected)
 
 	wordLists = append(wordLists, firstShare)
-	index, threshold, _ := secretsharing.AnalyzeShare(firstShare, bitLength)
-	fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
+	// index, threshold, _ := secretsharing.AnalyzeShare(firstShare, bitLength)
+	// fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
 
-	for i := 1; i < threshold; i++ {
-		fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
+	for i := 1; i < 2; i++ {
+		// fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
 		share := readShare(reader, protected)
-		secretsharing.AnalyzeShare(share, bitLength)
+		// secretsharing.AnalyzeShare(share, bitLength)
 		wordLists = append(wordLists, share)
 	}
 	return wordLists

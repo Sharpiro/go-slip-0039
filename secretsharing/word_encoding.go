@@ -10,16 +10,17 @@ import (
 func getMnemonicList(formattedShares [][]byte, secretByteSize int) [][]string {
 	wordLists := make([][]string, len(formattedShares))
 	for i := range wordLists {
-		// first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
-		// second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
-		// combined := append(first, second...)
-		combined := bits.HexToPower2(formattedShares[i], 10)
-		resized := bits.ResizeWordIndex(combined, secretByteSize)
-		andBack := bits.Power2ToHex(combined, 10)
-		andBackResized := bits.Power2ToHex(resized, 10)
-		_ = andBack
-		_ = andBackResized
-		wordLists[i] = getMnemonic(resized)
+		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
+		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
+		combined := append(first, second...)
+		_ = combined
+
+		indexes := bits.HexToPower2(formattedShares[i], 10)
+		// andBack := bits.Power2ToHex(buffer, 10)
+		// bytesResized := bits.ResizeBytes(andBack, secretByteSize)
+		// andBackResized := bits.HexToPower2(bytesResized, 10)
+		// _ = andBackResized
+		wordLists[i] = getMnemonic(indexes)
 	}
 	return wordLists
 }
@@ -70,8 +71,9 @@ func getMnemonicBuffer(indexList []uint, entorpySizeBytes int) []byte {
 	// preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
 	// dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, entorpySizeBytes*8)
 	allBytes := bits.Power2ToHex(indexList, 10)
-	expectedChecksum := allBytes[len(allBytes)-2:]
-	data := allBytes[:len(allBytes)-2]
+	bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)[:len(allBytes)-1]
+	expectedChecksum := bytesResized[len(bytesResized)-2:]
+	data := bytesResized[:len(bytesResized)-2]
 	actualChecksum := cryptos.GetSha256(data)[:2]
 	if !bytes.Equal(expectedChecksum, actualChecksum) {
 		log.Fatal("invalid share checksum")

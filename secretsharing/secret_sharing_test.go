@@ -2,11 +2,11 @@ package secretsharing
 
 import (
 	"bytes"
-	cryptoRandom "crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"go-slip-0039/cryptos"
 	mathRandom "math/rand"
+	"strings"
 	"testing"
 	"time"
 )
@@ -14,12 +14,14 @@ import (
 var _tester *testing.T
 
 func TestGetMnemonicList(tester *testing.T) {
-	secret := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	secret := []byte{9, 8, 7, 6}
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(3, 2, checksummedSecret)
 	formattedShares := createFormattedShares(xValues, yValues, 2)
 	list := getMnemonicList(formattedShares, len(secret))
-	_ = list
+
+	buffers := getMnemonicBuffers(list, len(secret))
+	_ = buffers
 }
 
 func TestSecretSharing(tester *testing.T) {
@@ -29,8 +31,7 @@ func TestSecretSharing(tester *testing.T) {
 		randomN := uint(mathRandom.Intn(31) + 2)             // 2 <= randomN <= 32
 		randomK := uint(mathRandom.Intn(int(randomN-1)) + 2) // 2 <= randomK <= randomN
 		randomLength := mathRandom.Intn(64) + 1
-		secretBytes := make([]byte, randomLength)
-		cryptoRandom.Read(secretBytes)
+		secretBytes := cryptos.GetBytes(randomLength)
 		xValues, yValues := createShares(randomN, randomK, secretBytes)
 		assertEqual(secretBytes, recoverSecret(xValues, yValues))
 		for j := 0; j < 10; j++ {
@@ -38,6 +39,14 @@ func TestSecretSharing(tester *testing.T) {
 			assertEqual(secretBytes, recoverSecret(randXValues, randYValues))
 		}
 	}
+}
+
+func TestRecoverFromWordShares(tester *testing.T) {
+	var shares = [][]string{
+		strings.Split("adult analyst orient luxury critic endless", " "),
+		strings.Split("actress analyst robust alcohol source review", " "),
+	}
+	RecoverFromWordShares(shares, 1*8)
 }
 
 // func TestSecretSharingWords(tester *testing.T) {
