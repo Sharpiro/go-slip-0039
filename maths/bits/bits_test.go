@@ -1,21 +1,52 @@
 package bits
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 )
 
 func TestGetBits(tester *testing.T) {
-	indexList := []byte{11, 10, 5, 4, 97, 219}
-	bitsx := GetBits(indexList[0], 8)
-	_ = bitsx
+	var testByte byte = 11
+	bits := GetBits(testByte, 8)
+	if bits != "00001011" {
+		tester.Error()
+	}
+}
+
+func TestGetBitsArray(tester *testing.T) {
+	rawShare := []byte{11, 10, 5, 4, 97, 219}
+	bits := GetBitsArray(rawShare, 8)
+	if bits != "000010110000101000000101000001000110000111011011" {
+		tester.Error()
+	}
 }
 
 func TestGetBytes(tester *testing.T) {
 	bits := "0000000001000010110000101000000101000001000110000111011011000000"
-	size := 58
-	bytes := GetBytes(bits, size)
-	_ = bytes
+	expectedBytes := []byte{0, 66, 194, 129, 65, 24, 118, 192}
+	actualBytes := GetBytes(bits)
+	if !bytes.Equal(expectedBytes, actualBytes) {
+		tester.Error()
+	}
+}
+
+func TestGetBytesUneven(tester *testing.T) {
+	bits := "0101010101"
+	paddedBits := PadBits(bits)
+	actualBytes := GetBytes(paddedBits)
+	expectedBytes := []byte{85, 64}
+	if !bytes.Equal(expectedBytes, actualBytes) {
+		tester.Error(0)
+	}
+}
+
+func TestPadBits(tester *testing.T) {
+	bits := "0101010101" // size 10
+	paddedBits := PadBits(bits)
+	if len(paddedBits) != 16 {
+		tester.Error()
+	}
 }
 
 func TestIntToByteConversion(tester *testing.T) {

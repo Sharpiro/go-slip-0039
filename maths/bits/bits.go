@@ -14,14 +14,30 @@ func GetBits(x byte, padding int) string {
 	return paddedString
 }
 
-func GetBytes(bits string, size int) *SmartBuffer {
+func GetBitsArray(buffer []byte, padding int) string {
+	var bits string
+	for _, j := range buffer {
+		bits = bits + GetBits(j, padding)
+	}
+	return bits
+}
+
+func GetBytes(bits string) []byte {
 	bytes := make([]byte, 0)
 	for i := 0; i < len(bits); i += 8 {
 		data := bits[i : i+8]
 		parsed, _ := strconv.ParseInt(data, 2, 64)
 		bytes = append(bytes, byte(parsed))
 	}
-	return &SmartBuffer{buffer: bytes, size: size}
+	// return &SmartBuffer{buffer: bytes}
+	return bytes
+}
+
+func PadBits(bits string) string {
+	paddedBitsSize := int(math.Ceil(float64(len(bits))/8)) * 8
+	paddingBits := GetBits(0, paddedBitsSize-len(bits))
+	bits = bits + paddingBits
+	return bits
 }
 
 // Power2ToHex  Converts vector of integers representing number base 2^p to a byte-vector

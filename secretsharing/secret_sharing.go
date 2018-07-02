@@ -6,21 +6,22 @@ import (
 	"go-slip-0039/maths"
 	"go-slip-0039/maths/bits"
 	"log"
-	"math"
 )
 
 // CreateWordShares creates shares based off a given secret
 func CreateWordShares(n, k uint, secret []byte) [][]string {
 	checksummedSecret := getChecksummedSecret(secret)
 	xValues, yValues := createShares(n, k, checksummedSecret)
-	formattedShares := createFormattedShares(xValues, yValues, k)
-	wordLists := getMnemonicList(formattedShares, len(secret))
-	return wordLists
+	shares := createRawShares(xValues, yValues, k)
+	checksummedShares := createChecksummedShares(shares)
+	indexesList := getIndexesList(checksummedShares, len(secret))
+	mnemoniclists := getMnemonicList(indexesList)
+	return mnemoniclists
 }
 
 // RecoverFromWordShares recovers a secret based off of K supplied word lists
-func RecoverFromWordShares(wordLists [][]string, bitLength int) []byte {
-	formattedShares := getMnemonicBuffers(wordLists, bitLength/8)
+func RecoverFromWordShares(wordLists [][]string, secretSizeBytes int) []byte {
+	formattedShares := getMnemonicBuffers(wordLists, secretSizeBytes)
 	xValues, yValues := recoverFromFormattedShare(formattedShares)
 	checkSummedSecret := recoverSecret(xValues, yValues)
 	secret := getSecret(checkSummedSecret)
@@ -110,41 +111,62 @@ func recoverFromFormattedShare(shareBlock [][]byte) ([]uint, [][]byte) {
 	return xValues, yValues
 }
 
-func createFormattedShares(xValues []uint, yValues [][]byte, k uint) [][]byte {
-	shares := make([][]byte, len(xValues))
-	concatLen := len(yValues[0]) + 1 + 1 + 2
-	for i := 0; i < len(xValues); i++ {
-		index := xValues[i] - 1
-		threshold := k - 1
-		sssPart := yValues[i]
-		concat := make([]byte, 0, concatLen)
-		concat = append(concat, byte(index), byte(threshold))
-		concat = append(concat, sssPart...)
-		checksum := cryptos.GetSha256(concat)[:2]
-		concat = append(concat, checksum...)
-		shares[i] = concat
+// func createFormattedShares(xValues []uint, yValues [][]byte, k uint) [][]byte {
+// 	shares := make([][]byte, len(xValues))
+// 	concatLen := len(yValues[0]) + 1 + 1 + 2
+// 	for i := 0; i < len(xValues); i++ {
+// 		index := xValues[i] - 1
+// 		threshold := k - 1
+// 		sssPart := yValues[i]
+// 		concat := make([]byte, 0, concatLen)
+// 		concat = append(concat, byte(index), byte(threshold))
+// 		concat = append(concat, sssPart...)
+// 		checksum := cryptos.GetSha256(concat)[:2]
+// 		concat = append(concat, checksum...)
+// 		shares[i] = concat
+// 	}
+// 	return shares
+// }
+
+func createRawShares(xValues []uint, yValues [][]byte, k uint) []*bits.SmartBuffer {
+	shares := make([]*bits.SmartBuffer, 0)
+	for i, j := range yValues {
+		share := makeShare(j, uint(i+1), k)
+		shares = append(shares, share)
 	}
 	return shares
 }
 
-func makeShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
-	indexBits := bits.GetBits(byte(index), 5)
-	thresholdBits := bits.GetBits(byte(threshold), 5)
-	testString := ""
-	// test := make([]string, len(shamirPart))
-	for i := 0; i < len(shamirPart); i++ {
-		// test[i] = bits.GetBits(shamirPart[i], 8)
-		testString += bits.GetBits(shamirPart[i], 8)
+func createChecksummedShares(smartBuffers []*bits.SmartBuffer) []*bits.SmartBuffer {
+	checksummedShares := make([]*bits.SmartBuffer, 0)
+	for _, j := range smartBuffers {
+		checksummedShare := j.GetChecksummedBuffer()
+		checksummedShares = append(checksummedShares, checksummedShare)
 	}
-	actualBitsLen := len(shamirPart)*8 + 10
-	expectedPower := math.Ceil(math.Log2(float64(actualBitsLen)))
-	expectedBitsLen := int(math.Pow(2, expectedPower))
-	_ = expectedBitsLen
-	padding := bits.GetBits(0, expectedBitsLen-actualBitsLen)
-	concat := indexBits + thresholdBits + testString + padding
-	concatLen := len(concat)
-	_ = concatLen
-	smartBuffer := bits.GetBytes(concat, actualBitsLen)
+	return checksummedShares
+}
+
+func makeShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
+	indexBits := bits.GetBits(byte(index-1), 5)
+	thresholdBits := bits.GetBits(byte(threshold-1), 5)
+	shamirBits := ""
+	for _, j := range shamirPart {
+		shamirBits += bits.GetBits(j, 8)
+	}
+
+	// actualBitsLen := len(shamirPart)*8 + 10
+	// expectedPower := math.Ceil(math.Log2(float64(actualBitsLen)))
+	// paddedBitsLen := int(math.Pow(2, expectedPower))
+	// padding := bits.GetBits(0, paddedBitsLen-actualBitsLen)
+
+	allBits := indexBits + thresholdBits + shamirBits
+	allBitsPadded := bits.PadBits(allBits)
+	// allBitsPadded := indexBits + thresholdBits + shamirBits + padding
+	allBitsLen := len(allBits)
+	allBitsPaddedLen := len(allBitsPadded)
+	_ = allBitsPaddedLen
+	bytes := bits.GetBytes(allBitsPadded)
+	smartBuffer := &bits.SmartBuffer{Buffer: bytes, Size: allBitsLen}
 	return smartBuffer
 }
 

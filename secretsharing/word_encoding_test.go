@@ -24,6 +24,21 @@ func TestGetMnemonicBuffer(tester *testing.T) {
 // 	getMnemonicBuffer(indexList, entropySizeBytes)
 // }
 
+func TestShareIndexAndThresholdSimple(tester *testing.T) {
+	secretBytes := []byte{9, 8, 7, 6}
+	wordLists := CreateWordShares(3, 2, secretBytes)
+
+	if wordLists[0][0] != "acid" {
+		tester.Error()
+	}
+	if wordLists[1][0] != "anger" {
+		tester.Error()
+	}
+	if wordLists[2][0] != "axis" {
+		tester.Error()
+	}
+}
+
 func TestShareIndexAndThreshold(tester *testing.T) {
 	randomLength := 32
 	secretBytes := cryptos.GetBytes(randomLength)

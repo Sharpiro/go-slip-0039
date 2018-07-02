@@ -7,20 +7,37 @@ import (
 	"log"
 )
 
-func getMnemonicList(formattedShares [][]byte, secretByteSize int) [][]string {
-	wordLists := make([][]string, len(formattedShares))
-	for i := range wordLists {
-		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
-		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
-		combined := append(first, second...)
-		_ = combined
+// func getMnemonicList(formattedShares [][]byte, secretByteSize int) [][]string {
+// 	wordLists := make([][]string, len(formattedShares))
+// 	for i := range wordLists {
+// 		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
+// 		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
+// 		combined := append(first, second...)
+// 		_ = combined
 
-		indexes := bits.HexToPower2(formattedShares[i], 10)
-		// andBack := bits.Power2ToHex(buffer, 10)
-		// bytesResized := bits.ResizeBytes(andBack, secretByteSize)
-		// andBackResized := bits.HexToPower2(bytesResized, 10)
-		// _ = andBackResized
-		wordLists[i] = getMnemonic(indexes)
+// 		indexes := bits.HexToPower2(formattedShares[i], 10)
+// 		// andBack := bits.Power2ToHex(buffer, 10)
+// 		// bytesResized := bits.ResizeBytes(andBack, secretByteSize)
+// 		// andBackResized := bits.HexToPower2(bytesResized, 10)
+// 		// _ = andBackResized
+// 		wordLists[i] = getMnemonic(indexes)
+// 	}
+// 	return wordLists
+// }
+
+func getIndexesList(smartBuffers []*bits.SmartBuffer, secretSizeBytes int) [][]uint {
+	indexesList := make([][]uint, len(smartBuffers))
+	for i, v := range smartBuffers {
+		indexesList[i] = bits.HexToPower2(v.Buffer, 10)
+		indexesList[i] = bits.ResizeWordIndex(indexesList[i], secretSizeBytes)
+	}
+	return indexesList
+}
+
+func getMnemonicList(indexList [][]uint) [][]string {
+	wordLists := make([][]string, len(indexList))
+	for i, v := range indexList {
+		wordLists[i] = getMnemonic(v)
 	}
 	return wordLists
 }
@@ -71,7 +88,8 @@ func getMnemonicBuffer(indexList []uint, entorpySizeBytes int) []byte {
 	// preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
 	// dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, entorpySizeBytes*8)
 	allBytes := bits.Power2ToHex(indexList, 10)
-	bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)[:len(allBytes)-1]
+	// bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)[:len(allBytes)-1]
+	bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)
 	expectedChecksum := bytesResized[len(bytesResized)-2:]
 	data := bytesResized[:len(bytesResized)-2]
 	actualChecksum := cryptos.GetSha256(data)[:2]
@@ -92,4 +110,12 @@ func getMnemonicIndexes(words []string) []uint {
 		}
 	}
 	return indexes
+}
+
+func getMnemonicIndexesList(wordsList [][]string) [][]uint {
+	indexesList := make([][]uint, len(wordsList))
+	for i, v := range wordsList {
+		indexesList[i] = getMnemonicIndexes(v)
+	}
+	return indexesList
 }
