@@ -2,27 +2,8 @@ package secretsharing
 
 import (
 	"go-slip-0039/cryptos"
-	"strings"
 	"testing"
 )
-
-func TestGetMnemonicBuffer(tester *testing.T) {
-	words := strings.Split("academic alpha crystal ocean rapid pave", " ")
-	indexList := getMnemonicIndexes(words)
-	entropySizeBytes := 2
-	getMnemonicBuffer(indexList, entropySizeBytes)
-}
-
-// func TestGetMnemonicBufferjakubtrnka(tester *testing.T) {
-// 	// 	acid glance scatter multiply muscle evolve vote hedgehog vanish shoe road sense ugly raise sister scout educate
-// 	// anger mansion second exclude grow garden video purchase cost skin crowd surface brush choice machine lock shed
-// 	// axis clerk cupboard golden endless minute army lecture fuel soldier peace regret deny extra group execute menu
-// 	hexEntropy := "c9d32bb6f9a2024b9e12c2cd4af717c1"
-// 	entropySizeBytes := len(hexEntropy) / 2 // 16 bytes | 128 bits
-
-// 	indexList := []uint{1, 400, 766, 582, 583, 312, 984, 430, 960, 795, 745, 785, 935, 706, 806, 772, 274}
-// 	getMnemonicBuffer(indexList, entropySizeBytes)
-// }
 
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	secretBytes := []byte{9, 8, 7, 6}

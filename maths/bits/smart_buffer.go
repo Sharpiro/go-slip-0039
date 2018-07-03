@@ -2,6 +2,7 @@ package bits
 
 import (
 	"go-slip-0039/cryptos"
+	"log"
 )
 
 // SmartBuffer holds a buffer as well as the number of actual bits
@@ -19,9 +20,30 @@ func (smartBuffer *SmartBuffer) Append(buffer []byte) *SmartBuffer {
 	smartBufferBits := GetBitsArray(smartBuffer.Buffer, 8)[:smartBuffer.Size]
 	bufferBits := GetBitsArray(buffer, 8)
 	combinedBits := smartBufferBits + bufferBits
-	paddedBits := PadBits(combinedBits)
-	newSmartBuffer := NewSmartBuffer(GetBytes(paddedBits), len(combinedBits))
+	newSmartBuffer := SmartBufferFromBits(combinedBits)
 	return newSmartBuffer
+}
+
+func (smartBuffer *SmartBuffer) PopBits(size int) *SmartBuffer {
+	smartBufferBits := GetBitsArray(smartBuffer.Buffer, 8)[:smartBuffer.Size]
+	poppedBits := smartBufferBits[len(smartBufferBits)-size:]
+	remainingBits := smartBufferBits[:len(smartBufferBits)-size]
+	if len(poppedBits) != size {
+		log.Fatal("'PopBits returned incorrectly sized slice")
+	}
+	if len(remainingBits) != smartBuffer.Size-size {
+		log.Fatal("'PopBits returned incorrectly sized slice")
+	}
+
+	remainingSmartBuffer := SmartBufferFromBits(remainingBits)
+	smartBuffer.Buffer = remainingSmartBuffer.Buffer
+	smartBuffer.Size = remainingSmartBuffer.Size
+	poppedSmartBuffer := SmartBufferFromBits(poppedBits)
+	return poppedSmartBuffer
+}
+
+func (smartBuffer *SmartBuffer) GetBits() string {
+	return GetBitsArray(smartBuffer.Buffer, 8)[:smartBuffer.Size]
 }
 
 func (smartBuffer *SmartBuffer) GetChecksummedBuffer() *SmartBuffer {
@@ -30,6 +52,18 @@ func (smartBuffer *SmartBuffer) GetChecksummedBuffer() *SmartBuffer {
 	return newSmartBuffer
 }
 
-func NewSmartBuffer(buffer []byte, size int) *SmartBuffer {
-	return &SmartBuffer{buffer, size}
+func (smartBuffer *SmartBuffer) Clone() *SmartBuffer {
+	clonedBuffer := make([]byte, len(smartBuffer.Buffer))
+	copy(clonedBuffer, smartBuffer.Buffer)
+	return SmartBufferFromBytes(clonedBuffer, smartBuffer.Size)
+}
+
+func SmartBufferFromBytes(buffer []byte, sizeBits int) *SmartBuffer {
+	return &SmartBuffer{buffer, sizeBits}
+}
+
+func SmartBufferFromBits(bits string) *SmartBuffer {
+	paddedBits := PadBits(bits)
+	buffer := GetBytes(paddedBits)
+	return &SmartBuffer{buffer, len(bits)}
 }

@@ -49,6 +49,14 @@ func TestPadBits(tester *testing.T) {
 	}
 }
 
+func TestPadBitsNoChange(tester *testing.T) {
+	bits := "0000000001000010" // size 16
+	paddedBits := PadBits(bits)
+	if len(paddedBits) != 16 {
+		tester.Error()
+	}
+}
+
 func TestIntToByteConversion(tester *testing.T) {
 	indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
 

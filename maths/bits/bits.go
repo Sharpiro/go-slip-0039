@@ -26,16 +26,23 @@ func GetBytes(bits string) []byte {
 	bytes := make([]byte, 0)
 	for i := 0; i < len(bits); i += 8 {
 		data := bits[i : i+8]
-		parsed, _ := strconv.ParseInt(data, 2, 64)
+		parsed, err := strconv.ParseInt(data, 2, 64)
+		if err != nil {
+			log.Fatal("failed converting bits to bytes")
+		}
 		bytes = append(bytes, byte(parsed))
 	}
-	// return &SmartBuffer{buffer: bytes}
 	return bytes
 }
 
 func PadBits(bits string) string {
-	paddedBitsSize := int(math.Ceil(float64(len(bits))/8)) * 8
-	paddingBits := GetBits(0, paddedBitsSize-len(bits))
+	finalPaddedBitsSize := int(math.Ceil(float64(len(bits))/8)) * 8
+	remainingPaddingSize := finalPaddedBitsSize - len(bits)
+	var paddingBits string
+	if remainingPaddingSize > 0 {
+		paddingBits = GetBits(0, remainingPaddingSize)
+	}
+
 	bits = bits + paddingBits
 	return bits
 }

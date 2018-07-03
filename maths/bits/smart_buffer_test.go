@@ -6,7 +6,7 @@ import (
 )
 
 func TestSmartBufferCopy(tester *testing.T) {
-	smartBuffer := *NewSmartBuffer([]byte{1, 2, 3, 4, 5}, 40)
+	smartBuffer := *SmartBufferFromBytes([]byte{1, 2, 3, 4, 5}, 40)
 	pointerToSmartBuffer := &smartBuffer
 	copyOfSmartBuffer := smartBuffer
 	pointerToSmartBuffer.Size = 12
@@ -22,7 +22,7 @@ func TestSmartBufferCopy(tester *testing.T) {
 
 func TestChecksum(tester *testing.T) {
 	shareSize := 58
-	share := NewSmartBuffer([]byte{0, 66, 194, 129, 65, 24, 118, 192}, shareSize)
+	share := SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 192}, shareSize)
 	expectedChecksumShare := []byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}
 
 	checksum := share.GetChecksum()
@@ -44,6 +44,20 @@ func TestChecksum(tester *testing.T) {
 	}
 
 	if actualChecksummedShare2.Size != actualChecksummedShare.Size {
+		tester.Error()
+	}
+}
+
+func TestClone(tester *testing.T) {
+	buffer := []byte{1, 2, 3, 4, 5}
+	smartBuffer := SmartBufferFromBytes(buffer, len(buffer)*8)
+	clonedBuffer := smartBuffer.Clone()
+	smartBuffer.Buffer[0] = 99
+	clonedBuffer.Size = 99
+	if clonedBuffer.Buffer[0] != 1 {
+		tester.Error()
+	}
+	if smartBuffer.Size == 99 {
 		tester.Error()
 	}
 }

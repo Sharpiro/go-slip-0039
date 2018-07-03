@@ -7,24 +7,6 @@ import (
 	"log"
 )
 
-// func getMnemonicList(formattedShares [][]byte, secretByteSize int) [][]string {
-// 	wordLists := make([][]string, len(formattedShares))
-// 	for i := range wordLists {
-// 		first := bits.GetBitBlocksBigEndian(formattedShares[i][:2], 5, 10)
-// 		second := bits.GetBitBlocksBigEndian(formattedShares[i][2:], 8, 10)
-// 		combined := append(first, second...)
-// 		_ = combined
-
-// 		indexes := bits.HexToPower2(formattedShares[i], 10)
-// 		// andBack := bits.Power2ToHex(buffer, 10)
-// 		// bytesResized := bits.ResizeBytes(andBack, secretByteSize)
-// 		// andBackResized := bits.HexToPower2(bytesResized, 10)
-// 		// _ = andBackResized
-// 		wordLists[i] = getMnemonic(indexes)
-// 	}
-// 	return wordLists
-// }
-
 func getIndexesList(smartBuffers []*bits.SmartBuffer, secretSizeBytes int) [][]uint {
 	indexesList := make([][]uint, len(smartBuffers))
 	for i, v := range smartBuffers {
@@ -63,41 +45,42 @@ func AnalyzeFirstWord(firstWord string) (index int, threshold int) {
 	return int(preBytes[0] + 1), int(preBytes[1] + 1)
 }
 
-func getMnemonicBuffers(wordLists [][]string, entorpySizeBytes int) [][]byte {
-	mnemonicBuffers := make([][]byte, len(wordLists))
-	dupeIndexVerifier := make(map[string]bool, len(wordLists))
+func getChecksummedBuffers(indexLists [][]uint, entorpySizeBytes int) []*bits.SmartBuffer {
+	mnemonicBuffers := make([]*bits.SmartBuffer, len(indexLists))
 
-	for i, wordList := range wordLists {
-		if _, exists := dupeIndexVerifier[wordList[0]]; exists {
-			log.Fatal("Two shares had identical indexes, each share must have a unique index")
-		}
-		dupeIndexVerifier[wordList[0]] = true
-		mnemonicIndexes := getMnemonicIndexes(wordList)
-		mnemonicBuffer := getMnemonicBuffer(mnemonicIndexes, entorpySizeBytes)
+	for i, indexList := range indexLists {
+		mnemonicBuffer := getChecksummedBuffer(indexList, entorpySizeBytes)
 		mnemonicBuffers[i] = mnemonicBuffer
 	}
 	return mnemonicBuffers
 }
 
-func getMnemonicBuffer(indexList []uint, entorpySizeBytes int) []byte {
-	// tempRebuild2 := bits.HexToPower2(allBytes, 10)
-	// tempBuild2Resized := bits.ResizeWordIndex(tempRebuild2, entorpySizeBytes)
+func getUnchecksummedBuffers(smartBuffers []*bits.SmartBuffer) []*bits.SmartBuffer {
+	unchecksummedBuffers := make([]*bits.SmartBuffer, len(smartBuffers))
 
-	// _ = tempRebuild2
-	// _ = tempBuild2Resized
-	// preBytes := bits.ReverseBitsBigEndian(indexList[:1], 5, 10, 16)
-	// dataWithChecksum := bits.ReverseBitsBigEndian(indexList[1:], 8, 10, entorpySizeBytes*8)
+	for i, checksummedBuffer := range smartBuffers {
+		unchecksummedBuffer := getUnchecksummedBuffer(checksummedBuffer)
+		unchecksummedBuffers[i] = unchecksummedBuffer
+	}
+	return unchecksummedBuffers
+}
+
+func getChecksummedBuffer(indexList []uint, entorpySizeBytes int) *bits.SmartBuffer {
 	allBytes := bits.Power2ToHex(indexList, 10)
-	// bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)[:len(allBytes)-1]
 	bytesResized := bits.ResizeBytes(allBytes, entorpySizeBytes)
-	expectedChecksum := bytesResized[len(bytesResized)-2:]
-	data := bytesResized[:len(bytesResized)-2]
-	actualChecksum := cryptos.GetSha256(data)[:2]
-	if !bytes.Equal(expectedChecksum, actualChecksum) {
+	bufferBitSize := entorpySizeBytes*8 + 16 + 16 + 10
+	smartBuffer := bits.SmartBufferFromBytes(bytesResized, bufferBitSize)
+	return smartBuffer
+}
+
+func getUnchecksummedBuffer(smartBuffer *bits.SmartBuffer) *bits.SmartBuffer {
+	cloneBuffer := smartBuffer.Clone()
+	expectedChecksum := cloneBuffer.PopBits(16)
+	actualChecksum := cryptos.GetSha256(cloneBuffer.Buffer)[:2]
+	if !bytes.Equal(expectedChecksum.Buffer, actualChecksum) {
 		log.Fatal("invalid share checksum")
 	}
-	final := append(data, expectedChecksum...)
-	return final
+	return cloneBuffer
 }
 
 func getMnemonicIndexes(words []string) []uint {
@@ -112,10 +95,15 @@ func getMnemonicIndexes(words []string) []uint {
 	return indexes
 }
 
-func getMnemonicIndexesList(wordsList [][]string) [][]uint {
-	indexesList := make([][]uint, len(wordsList))
-	for i, v := range wordsList {
-		indexesList[i] = getMnemonicIndexes(v)
+func getMnemonicIndexesList(wordLists [][]string) [][]uint {
+	indexesList := make([][]uint, len(wordLists))
+	dupeIndexVerifier := make(map[string]bool, len(wordLists))
+	for i, wordList := range wordLists {
+		if _, exists := dupeIndexVerifier[wordList[0]]; exists {
+			log.Fatal("Two shares had identical indexes, each share must have a unique index")
+		}
+		dupeIndexVerifier[wordList[0]] = true
+		indexesList[i] = getMnemonicIndexes(wordList)
 	}
 	return indexesList
 }
