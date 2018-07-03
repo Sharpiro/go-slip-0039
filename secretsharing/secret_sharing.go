@@ -32,12 +32,21 @@ func RecoverFromWordShares(mnemonicLists [][]string, secretSizeBytes int) []byte
 }
 
 // AnalyzeShare returns useful data about a given share
-func AnalyzeShare(share []string, bitLength int) (index, threshold, length int) {
-	index, threshold = AnalyzeFirstWord(share[0])
+func AnalyzeShare(share []string, secretSizeBytes int) (index, threshold int) {
 	mnemonicIndexes := getMnemonicIndexes(share)
-	_ = getChecksummedBuffer(mnemonicIndexes, bitLength/8)
-	length = len(share[0]) >> 1 // todo: what is this again??
-	return index, threshold, length
+	checksummedBuffer := getChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
+	unchecksummedBuffer := getUnchecksummedBuffer(checksummedBuffer)
+	bits := unchecksummedBuffer.GetBits()
+	indexBits := bits[0:5]
+	thresholdBits := bits[5:10]
+	indexRaw, _ := strconv.ParseInt(indexBits, 2, 64)
+	thresholdRaw, _ := strconv.ParseInt(thresholdBits, 2, 64)
+	index = int(indexRaw) + 1
+	threshold = int(thresholdRaw) + 1
+
+	length := len(share[0]) >> 1 // todo: what is this again??
+	_ = length                   // lol still don't remember what this is
+	return index, threshold
 }
 
 func createShares(n, k uint, secret []byte) ([]uint, [][]byte) {

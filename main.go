@@ -97,13 +97,12 @@ func recover(context *cli.Context) {
 	if secretSizeBits < 1 {
 		log.Fatal("must provide size in bits of master secert to be recovered")
 	}
-	totalBitLength := secretSizeBits
+	secretSizeBytes := secretSizeBits / 8
 	protected := context.Bool("protected")
-	shares := readShares(protected, totalBitLength)
+	shares := readShares(protected, secretSizeBytes)
 	passPhrase := context.String("passphrase")
 
-	// totalBitLength := (len(secretBytes) + 4) << 3
-	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares, totalBitLength)
+	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares, secretSizeBytes)
 	recoveredSecret := hex.EncodeToString(recoveredSecretBytes)
 	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
 	generatedSeedHex := hex.EncodeToString(generatedSeed)
@@ -112,7 +111,7 @@ func recover(context *cli.Context) {
 	fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
-func readShares(protected bool, bitLength int) [][]string {
+func readShares(protected bool, secretSizeBytes int) [][]string {
 	var wordLists [][]string
 	reader := bufio.NewReader(os.Stdin)
 
@@ -120,13 +119,14 @@ func readShares(protected bool, bitLength int) [][]string {
 	firstShare := readShare(reader, protected)
 
 	wordLists = append(wordLists, firstShare)
-	// index, threshold, _ := secretsharing.AnalyzeShare(firstShare, bitLength)
-	// fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
+	index, threshold := secretsharing.AnalyzeShare(firstShare, secretSizeBytes)
+	fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
 
-	for i := 1; i < 2; i++ {
-		// fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
+	for i := 1; i < threshold; i++ {
+		fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
 		share := readShare(reader, protected)
-		// secretsharing.AnalyzeShare(share, bitLength)
+		index, threshold = secretsharing.AnalyzeShare(share, secretSizeBytes)
+		fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
 		wordLists = append(wordLists, share)
 	}
 	return wordLists

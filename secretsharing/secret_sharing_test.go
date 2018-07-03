@@ -8,6 +8,7 @@ import (
 	"go-slip-0039/maths/bits"
 	mathRandom "math/rand"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -117,6 +118,38 @@ func TestSecretSharing(tester *testing.T) {
 			randXValues, randYValues := getRandomSlices(xValues, yValues, randomK)
 			assertEqual(secretBytes, recoverChecksummedSecret(randXValues, randYValues))
 		}
+	}
+}
+
+func TestRecoverFromWordShares1Byte(tester *testing.T) {
+	var shares = [][]string{
+		// strings.Split("acid world predict country obey", " "),
+		strings.Split("anger width radio engage cement", " "),
+		strings.Split("axis weather reward furnace library", " "),
+	}
+	expectedSecret := []byte{0xff}
+	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	if !bytes.Equal(expectedSecret, actualSecret) {
+		tester.Error()
+	}
+}
+
+func TestRecoverFromWordShares32Bytes(tester *testing.T) {
+	n := 4
+	k := 3
+	_ = n
+	_ = k
+	var shares = [][]string{
+		strings.Split("acoustic benefit smoke cricket primary image runway priority search symptom unique hundred coach pelican organ wealth under recall universe click grass group pave staff delay actor divert endorse shock elder", " "),
+		strings.Split("angry bulb type sausage under juice october destroy lemon spray siege wrestle heavy predict sauce hand primary rough silent resemble city hurdle lock earth insane anxiety brand surface music picture", " "),
+		// strings.Split("bean brown upset question program jewel pact coach science stadium slow usual corn primary robot jungle twist robust slush please glance idea lemon eyebrow debris animal busy similar stadium window", " "),
+		strings.Split("brain cousin code salt trouble enforce find devote mercy token animal world group ocean leaf hazard pistol menu angry repair club fresh elbow drift join device suit tackle purchase glue", " "),
+	}
+	// "13f253e7a4712e2b9a08da7a07e1a5a067ae92adb3fa13649966690c39d901ce"
+	expectedSecret := []byte{19, 242, 83, 231, 164, 113, 46, 43, 154, 8, 218, 122, 7, 225, 165, 160, 103, 174, 146, 173, 179, 250, 19, 100, 153, 102, 105, 12, 57, 217, 1, 206}
+	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	if !bytes.Equal(expectedSecret, actualSecret) {
+		tester.Error()
 	}
 }
 

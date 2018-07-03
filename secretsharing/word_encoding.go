@@ -35,16 +35,6 @@ func getMnemonic(mnemonicIndexes []uint) []string {
 	return words
 }
 
-// AnalyzeFirstWord analyzes the first word of a share to provide data about the share
-func AnalyzeFirstWord(firstWord string) (index int, threshold int) {
-	indexList := getMnemonicIndexes([]string{firstWord})
-	preBytes := bits.ReverseBitsBigEndian(indexList, 5, 10, 16)
-	if len(preBytes) != 2 {
-		log.Fatalf("Failed analyzing first word, expected 2 bytes, but was %v", len(preBytes))
-	}
-	return int(preBytes[0] + 1), int(preBytes[1] + 1)
-}
-
 func getChecksummedBuffers(indexLists [][]uint, entorpySizeBytes int) []*bits.SmartBuffer {
 	mnemonicBuffers := make([]*bits.SmartBuffer, len(indexLists))
 
