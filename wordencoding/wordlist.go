@@ -1,4 +1,4 @@
-package secretsharing
+package wordencoding
 
 var wordList = []string{
 	"academic",

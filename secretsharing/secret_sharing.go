@@ -5,6 +5,7 @@ import (
 	"go-slip-0039/cryptos"
 	"go-slip-0039/maths"
 	"go-slip-0039/maths/bits"
+	"go-slip-0039/wordencoding"
 	"log"
 	"strconv"
 )
@@ -18,8 +19,8 @@ func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
 	for i := 0; i < len(xValues); i++ {
 		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], k)
 		checksummedShare := unchecksummedShare.GetChecksummedBuffer()
-		indexList := createIndexList(checksummedShare, len(secret))
-		mnemonicWords := createMnemonicWords(indexList)
+		indexList := wordencoding.CreateIndexList(checksummedShare, len(secret))
+		mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
 		mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
 	}
 	return mnemonicWordsList
@@ -63,8 +64,8 @@ func RecoverSecretFromShamirData(xValues []uint, yValues [][]byte) []byte {
 
 // RecoverShare returns full information from a share
 func RecoverShare(share []string, secretSizeBytes int) (index, threshold uint, shamirBytes []byte) {
-	mnemonicIndexes := recoverIndexes(share)
-	checksummedBuffer := recoverChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
+	mnemonicIndexes := wordencoding.RecoverIndexes(share)
+	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
 	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer(2)
 	unchecksummedBits := unchecksummedBuffer.GetBits()
 	indexBits := unchecksummedBits[0:5]

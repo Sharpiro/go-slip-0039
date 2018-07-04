@@ -15,6 +15,46 @@ import (
 
 var _tester *testing.T
 
+func TestShareIndexAndThresholdSimple(tester *testing.T) {
+	secretBytes := []byte{9, 8, 7, 6}
+	wordLists := CreateMnemonicWordsList(3, 2, secretBytes)
+
+	if wordLists[0][0] != "acid" {
+		tester.Error()
+	}
+	if wordLists[1][0] != "anger" {
+		tester.Error()
+	}
+	if wordLists[2][0] != "axis" {
+		tester.Error()
+	}
+}
+
+func TestShareIndexAndThreshold(tester *testing.T) {
+	randomLength := 32
+	secretBytes := cryptos.GetBytes(randomLength)
+	wordLists := CreateMnemonicWordsList(6, 3, secretBytes)
+
+	if wordLists[0][0] != "acoustic" {
+		tester.Error()
+	}
+	if wordLists[1][0] != "angry" {
+		tester.Error()
+	}
+	if wordLists[2][0] != "bean" {
+		tester.Error()
+	}
+	if wordLists[3][0] != "brain" {
+		tester.Error()
+	}
+	if wordLists[4][0] != "catch" {
+		tester.Error()
+	}
+	if wordLists[5][0] != "clump" {
+		tester.Error()
+	}
+}
+
 func TestMakeShare(tester *testing.T) {
 	shamirPart := []byte{11, 10, 5, 4, 97, 219}
 	expectedShare := []byte{0, 66, 194, 129, 65, 24, 118, 192}
@@ -54,39 +94,6 @@ func TestToIndexListResized(tester *testing.T) {
 	expectedResizedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
 	actualResizedIndexList := bits.ResizeWordIndex(indexList, secretSizeBytes)
 	if !reflect.DeepEqual(expectedResizedIndexList, actualResizedIndexList) {
-		tester.Error()
-	}
-}
-
-func TestGetMnemonic(tester *testing.T) {
-	resizedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	expectedMnemonic := []string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"}
-	actualMnemonic := createMnemonicWords(resizedIndexList)
-	if !reflect.DeepEqual(expectedMnemonic, actualMnemonic) {
-		tester.Error()
-	}
-}
-
-func TestBackToIndexList(tester *testing.T) {
-	mnemonicWords := []string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"}
-	expectedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	actualIndexList := recoverIndexes(mnemonicWords)
-	if !reflect.DeepEqual(expectedIndexList, actualIndexList) {
-		tester.Error()
-	}
-}
-
-// skpping resize...
-
-func TestBackToChecksummedShare(tester *testing.T) {
-	indexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	entropySizeBytes := 4
-	expectedChecksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
-	actualChecksummedShare := recoverChecksummedBuffer(indexList, entropySizeBytes)
-	if expectedChecksummedShare.Size != actualChecksummedShare.Size {
-		tester.Error()
-	}
-	if !reflect.DeepEqual(expectedChecksummedShare.Buffer, actualChecksummedShare.Buffer) {
 		tester.Error()
 	}
 }
