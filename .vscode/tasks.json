@@ -4,6 +4,11 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "build",
+            "type": "shell",
+            "command": "go build"
+        },
+        {
             "label": "run",
             "type": "shell",
             "command": "go run main.go"
