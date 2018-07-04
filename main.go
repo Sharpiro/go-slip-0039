@@ -86,10 +86,12 @@ func create(context *cli.Context) {
 	if err != nil {
 		log.Fatal("an error occurred decoding the hex string to bytes")
 	}
-	shares := secretsharing.CreateWordShares(uint(n), uint(k), secretBytes)
-
-	fmt.Printf("secret: %v\n", secretHex)
-	fmt.Println(shares)
+	shares := secretsharing.CreateMnemonicWordsList(uint(n), uint(k), secretBytes)
+	replacer := strings.NewReplacer("[", "", "]", "")
+	for _, share := range shares {
+		formattedShare := replacer.Replace(fmt.Sprint(share))
+		fmt.Println(formattedShare)
+	}
 }
 
 func recover(context *cli.Context) {
@@ -99,10 +101,10 @@ func recover(context *cli.Context) {
 	}
 	secretSizeBytes := secretSizeBits / 8
 	protected := context.Bool("protected")
-	shares := readShares(protected, secretSizeBytes)
+	xValues, yValues := readShares(protected, secretSizeBytes)
 	passPhrase := context.String("passphrase")
 
-	recoveredSecretBytes := secretsharing.RecoverFromWordShares(shares, secretSizeBytes)
+	recoveredSecretBytes := secretsharing.RecoverSecretFromShamirData(xValues, yValues)
 	recoveredSecret := hex.EncodeToString(recoveredSecretBytes)
 	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
 	generatedSeedHex := hex.EncodeToString(generatedSeed)
@@ -111,25 +113,39 @@ func recover(context *cli.Context) {
 	fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
-func readShares(protected bool, secretSizeBytes int) [][]string {
+func readShares(protected bool, secretSizeBytes int) (xValues []uint, yValues [][]byte) {
 	var wordLists [][]string
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("please enter first share:")
+	fmt.Printf("please enter first share:\n")
 	firstShare := readShare(reader, protected)
 
 	wordLists = append(wordLists, firstShare)
-	index, threshold := secretsharing.AnalyzeShare(firstShare, secretSizeBytes)
-	fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
+	index, secretThreshold, shamirBuffer := secretsharing.RecoverShare(firstShare, secretSizeBytes)
+	shareThreshold := secretThreshold
+	xValues = append(xValues, index)
+	yValues = append(yValues, shamirBuffer)
+	indexMap := map[uint]bool{index: true}
+	fmt.Printf("index: '%v' threshold: '%v'\n\n", index, secretThreshold)
 
-	for i := 1; i < threshold; i++ {
-		fmt.Printf("please enter share %v/%v:\n", i+1, threshold)
+	for i := uint(1); i < secretThreshold; i++ {
+		fmt.Printf("please enter share %v/%v:\n", i+1, secretThreshold)
 		share := readShare(reader, protected)
-		index, threshold = secretsharing.AnalyzeShare(share, secretSizeBytes)
-		fmt.Printf("index: %v\tthreshold: %v\n", index, threshold)
+		index, shareThreshold, shamirBuffer = secretsharing.RecoverShare(share, secretSizeBytes)
+		fmt.Printf("index: '%v' threshold: '%v'\n\n", index, shareThreshold)
+		if shareThreshold != secretThreshold {
+			log.Fatalf("the share's threshold '%v', did not match the first share's threshold '%v'", shareThreshold, secretThreshold)
+		}
+		if _, exists := indexMap[index]; exists {
+			log.Fatalf("share with index '%v' was already entered.  Each share must have a unique index", index)
+		}
+		indexMap[index] = true
+		xValues = append(xValues, index)
+		yValues = append(yValues, shamirBuffer)
 		wordLists = append(wordLists, share)
 	}
-	return wordLists
+	fmt.Println()
+	return xValues, yValues
 }
 
 func readShare(reader *bufio.Reader, protected bool) []string {

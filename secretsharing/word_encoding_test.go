@@ -7,7 +7,7 @@ import (
 
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	secretBytes := []byte{9, 8, 7, 6}
-	wordLists := CreateWordShares(3, 2, secretBytes)
+	wordLists := CreateMnemonicWordsList(3, 2, secretBytes)
 
 	if wordLists[0][0] != "acid" {
 		tester.Error()
@@ -23,7 +23,7 @@ func TestShareIndexAndThresholdSimple(tester *testing.T) {
 func TestShareIndexAndThreshold(tester *testing.T) {
 	randomLength := 32
 	secretBytes := cryptos.GetBytes(randomLength)
-	wordLists := CreateWordShares(6, 3, secretBytes)
+	wordLists := CreateMnemonicWordsList(6, 3, secretBytes)
 
 	if wordLists[0][0] != "acoustic" {
 		tester.Error()
@@ -47,7 +47,7 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 
 func TestGetWordList(tester *testing.T) {
 	indexList := []uint{102, 20, 175, 1009, 3}
-	wordList := getMnemonic(indexList)
+	wordList := createMnemonicWords(indexList)
 
 	// fmt.Println(wordList)
 
@@ -70,7 +70,7 @@ func TestGetWordList(tester *testing.T) {
 
 func TestGetIndexList(tester *testing.T) {
 	wordList := []string{"bridge", "alcohol", "cousin", "winter", "actor"}
-	indexList := getMnemonicIndexes(wordList)
+	indexList := recoverIndexes(wordList)
 
 	// fmt.Println(indexList)
 

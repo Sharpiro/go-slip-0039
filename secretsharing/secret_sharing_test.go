@@ -18,7 +18,7 @@ var _tester *testing.T
 func TestMakeShare(tester *testing.T) {
 	shamirPart := []byte{11, 10, 5, 4, 97, 219}
 	expectedShare := []byte{0, 66, 194, 129, 65, 24, 118, 192}
-	actualShare := makeShare(shamirPart, 1, 2)
+	actualShare := createUnchecksummedShare(shamirPart, 1, 2)
 	if !bytes.Equal(expectedShare, actualShare.Buffer) {
 		tester.Error()
 	}
@@ -61,7 +61,7 @@ func TestToIndexListResized(tester *testing.T) {
 func TestGetMnemonic(tester *testing.T) {
 	resizedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
 	expectedMnemonic := []string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"}
-	actualMnemonic := getMnemonic(resizedIndexList)
+	actualMnemonic := createMnemonicWords(resizedIndexList)
 	if !reflect.DeepEqual(expectedMnemonic, actualMnemonic) {
 		tester.Error()
 	}
@@ -70,7 +70,7 @@ func TestGetMnemonic(tester *testing.T) {
 func TestBackToIndexList(tester *testing.T) {
 	mnemonicWords := []string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"}
 	expectedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	actualIndexList := getMnemonicIndexes(mnemonicWords)
+	actualIndexList := recoverIndexes(mnemonicWords)
 	if !reflect.DeepEqual(expectedIndexList, actualIndexList) {
 		tester.Error()
 	}
@@ -82,7 +82,7 @@ func TestBackToChecksummedShare(tester *testing.T) {
 	indexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
 	entropySizeBytes := 4
 	expectedChecksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
-	actualChecksummedShare := getChecksummedBuffer(indexList, entropySizeBytes)
+	actualChecksummedShare := recoverChecksummedBuffer(indexList, entropySizeBytes)
 	if expectedChecksummedShare.Size != actualChecksummedShare.Size {
 		tester.Error()
 	}
@@ -94,7 +94,7 @@ func TestBackToChecksummedShare(tester *testing.T) {
 func TestBackToUnchecksummedShare(tester *testing.T) {
 	checksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
 	expectedUnchecksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 192}, 58)
-	actualUnchecksummedShare := getUnchecksummedBuffer(checksummedShare)
+	actualUnchecksummedShare := checksummedShare.GetUnchecksummedBuffer(2)
 
 	if expectedUnchecksummedShare.Size != actualUnchecksummedShare.Size {
 		tester.Error()
@@ -112,7 +112,7 @@ func TestSecretSharing(tester *testing.T) {
 		randomK := uint(mathRandom.Intn(int(randomN-1)) + 2) // 2 <= randomK <= randomN
 		randomLength := mathRandom.Intn(64) + 1
 		secretBytes := cryptos.GetBytes(randomLength)
-		xValues, yValues := createShares(randomN, randomK, secretBytes)
+		xValues, yValues := createShamirData(randomN, randomK, secretBytes)
 		assertEqual(secretBytes, recoverChecksummedSecret(xValues, yValues))
 		for j := 0; j < 10; j++ {
 			randXValues, randYValues := getRandomSlices(xValues, yValues, randomK)
@@ -128,7 +128,7 @@ func TestRecoverFromWordShares1Byte(tester *testing.T) {
 		strings.Split("axis weather reward furnace library", " "),
 	}
 	expectedSecret := []byte{0xff}
-	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -147,7 +147,7 @@ func TestRecoverFromWordShares32Bytes(tester *testing.T) {
 	}
 	// "13f253e7a4712e2b9a08da7a07e1a5a067ae92adb3fa13649966690c39d901ce"
 	expectedSecret := []byte{19, 242, 83, 231, 164, 113, 46, 43, 154, 8, 218, 122, 7, 225, 165, 160, 103, 174, 146, 173, 179, 250, 19, 100, 153, 102, 105, 12, 57, 217, 1, 206}
-	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -159,7 +159,7 @@ func TestRecoverFromWordShares(tester *testing.T) {
 		[]string{"axis", "awake", "desert", "awkward", "bread", "thunder", "rude", "timber"},
 	}
 	expectedSecret := []byte{9, 8, 7, 6}
-	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -172,7 +172,7 @@ func TestRecoverFromWordShares2(tester *testing.T) {
 		[]string{"clump", "desert", "taxi", "gentle", "eternal", "damage", "similar", "bean", "avoid", "earth", "obtain"},
 	}
 	expectedSecret := []byte{8, 7, 6, 5, 4, 3, 2, 1}
-	actualSecret := RecoverFromWordShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -183,8 +183,8 @@ func TestSecretSharingWords(tester *testing.T) {
 		for i := 5; i < 64; i++ {
 			byteLength := i + 1
 			actualSecret := cryptos.GetBytes(byteLength)
-			wordShares := CreateWordShares(6, 3, actualSecret)
-			expectedSecret := RecoverFromWordShares(wordShares, byteLength)
+			wordShares := CreateMnemonicWordsList(6, 3, actualSecret)
+			expectedSecret := RecoverSecretFromMnemonicShares(wordShares, byteLength)
 
 			if !bytes.Equal(actualSecret, expectedSecret) {
 				tester.Error("secrets do not match")
@@ -193,34 +193,10 @@ func TestSecretSharingWords(tester *testing.T) {
 	}
 }
 
-func TestShareFormatting(tester *testing.T) {
-	secretBytes := cryptos.GetBytes(32)
-	checksummedSecret := getChecksummedSecret(secretBytes)
-	xValues, yValues := createShares(6, 3, checksummedSecret)
-	shares := createRawShares(xValues, yValues, 3)
-	checksummedShares := createChecksummedShares(shares)
-	indexesList := getIndexesList(checksummedShares, len(secretBytes))
-
-	checksummedBuffers := getChecksummedBuffers(indexesList, len(secretBytes))
-	unchecksummedBuffers := getUnchecksummedBuffers(checksummedBuffers)
-	recoveredXValues, recoveredYValues := recoverFromShare(unchecksummedBuffers)
-	for i, checksummedBuffer := range checksummedBuffers {
-		if len(checksummedBuffer.Buffer) != 38 {
-			tester.Error("expected formatted share to be 38 bytes")
-		}
-		if !bytes.Equal(yValues[i], recoveredYValues[i]) {
-			tester.Error("recovered y values did not match expected")
-		}
-		if xValues[i] != recoveredXValues[i] {
-			tester.Error("recovered x values did not match expected")
-		}
-	}
-}
-
 func TestGetChecksummedSecret(tester *testing.T) {
 	data := []byte("data")
 	hash := cryptos.GetSha256(data)[:2]
-	css := getChecksummedSecret(data)
+	css := createChecksummedSecret(data)
 	if !bytes.Equal(data, css[:4]) {
 		tester.Error()
 	}

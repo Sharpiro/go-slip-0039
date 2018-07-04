@@ -9,47 +9,76 @@ import (
 	"strconv"
 )
 
-// CreateWordShares creates shares based off a given secret
-func CreateWordShares(n, k uint, secret []byte) [][]string {
-	checksummedSecret := getChecksummedSecret(secret)
-	xValues, yValues := createShares(n, k, checksummedSecret)
-	shares := createRawShares(xValues, yValues, k)
-	checksummedShares := createChecksummedShares(shares)
-	indexesList := getIndexesList(checksummedShares, len(secret))
-	mnemoniclists := getMnemonicList(indexesList)
-	return mnemoniclists
+// CreateMnemonicWordsList creates shares based off a given secret
+func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
+	checksummedSecret := createChecksummedSecret(secret)
+	xValues, yValues := createShamirData(n, k, checksummedSecret)
+
+	var mnemonicWordsList [][]string
+	for i := 0; i < len(xValues); i++ {
+		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], k)
+		checksummedShare := unchecksummedShare.GetChecksummedBuffer()
+		indexList := createIndexList(checksummedShare, len(secret))
+		mnemonicWords := createMnemonicWords(indexList)
+		mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
+	}
+	return mnemonicWordsList
 }
 
-// RecoverFromWordShares recovers a secret based off of K supplied word lists
-func RecoverFromWordShares(mnemonicLists [][]string, secretSizeBytes int) []byte {
-	indexesList := getMnemonicIndexesList(mnemonicLists)
-	checksummedBuffers := getChecksummedBuffers(indexesList, secretSizeBytes)
-	unchecksummedBuffers := getUnchecksummedBuffers(checksummedBuffers)
-	indexes, shamirParts := recoverFromShare(unchecksummedBuffers)
-	checkummedSecret := recoverChecksummedSecret(indexes, shamirParts)
-	secret := getUnchecksummedSecret(checkummedSecret)
+// RecoverSecretFromMnemonicShares recovers a secret based off of K supplied word lists
+func RecoverSecretFromMnemonicShares(mnemonicWordsList [][]string, secretSizeBytes int) []byte {
+	var xValues []uint
+	var yValues [][]byte
+
+	index, secretThreshold, shamirBuffer := RecoverShare(mnemonicWordsList[0], secretSizeBytes)
+	xValues = append(xValues, index)
+	yValues = append(yValues, shamirBuffer)
+	for i := 1; i < len(mnemonicWordsList); i++ {
+		mnemonicWords := mnemonicWordsList[i]
+		index, shareThreshold, shamirBuffer := RecoverShare(mnemonicWords, secretSizeBytes)
+		if shareThreshold != secretThreshold {
+			log.Fatalf("the share's threshold '%v', did not match the first share's threshold '%v'", shareThreshold, secretThreshold)
+		}
+		xValues = append(xValues, index)
+		yValues = append(yValues, shamirBuffer)
+	}
+	secret := RecoverSecretFromShamirData(xValues, yValues)
 	return secret
 }
 
-// AnalyzeShare returns useful data about a given share
-func AnalyzeShare(share []string, secretSizeBytes int) (index, threshold int) {
-	mnemonicIndexes := getMnemonicIndexes(share)
-	checksummedBuffer := getChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
-	unchecksummedBuffer := getUnchecksummedBuffer(checksummedBuffer)
-	bits := unchecksummedBuffer.GetBits()
-	indexBits := bits[0:5]
-	thresholdBits := bits[5:10]
-	indexRaw, _ := strconv.ParseInt(indexBits, 2, 64)
-	thresholdRaw, _ := strconv.ParseInt(thresholdBits, 2, 64)
-	index = int(indexRaw) + 1
-	threshold = int(thresholdRaw) + 1
+// RecoverSecretFromShamirData recovers a secret based off of the raw shamir data
+func RecoverSecretFromShamirData(xValues []uint, yValues [][]byte) []byte {
+	indexMap := make(map[uint]bool, len(xValues))
+	for i := 0; i < len(xValues); i++ {
+		index := xValues[i]
+		if _, exists := indexMap[index]; exists {
+			log.Fatalf("share with index '%v' was already entered.  Each share must have a unique index", index)
+		}
+	}
 
-	length := len(share[0]) >> 1 // todo: what is this again??
-	_ = length                   // lol still don't remember what this is
-	return index, threshold
+	checkummedSecret := recoverChecksummedSecret(xValues, yValues)
+	secret := recoverUnchecksummedSecret(checkummedSecret)
+	return secret
 }
 
-func createShares(n, k uint, secret []byte) ([]uint, [][]byte) {
+// RecoverShare returns full information from a share
+func RecoverShare(share []string, secretSizeBytes int) (index, threshold uint, shamirBytes []byte) {
+	mnemonicIndexes := recoverIndexes(share)
+	checksummedBuffer := recoverChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
+	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer(2)
+	unchecksummedBits := unchecksummedBuffer.GetBits()
+	indexBits := unchecksummedBits[0:5]
+	thresholdBits := unchecksummedBits[5:10]
+	shamirBits := unchecksummedBits[10:]
+	indexRaw, _ := strconv.ParseInt(indexBits, 2, 64)
+	thresholdRaw, _ := strconv.ParseInt(thresholdBits, 2, 64)
+	index = uint(indexRaw) + 1
+	threshold = uint(thresholdRaw) + 1
+	shamirBytes = bits.GetBytes(shamirBits)
+	return index, threshold, shamirBytes
+}
+
+func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {
 	if n < k {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
@@ -103,52 +132,7 @@ func recoverChecksummedSecret(xValues []uint, yValues [][]byte) []byte {
 	return checksummedSecret
 }
 
-func recoverFromShare(shares []*bits.SmartBuffer) ([]uint, [][]byte) {
-	const encodingOffset byte = 1
-	xValues := make([]uint, len(shares))
-	yValues := make([][]byte, len(shares))
-	for i, share := range shares {
-		shareBits := share.GetBits()
-		indexBits := shareBits[:5]
-		thresholdBits := shareBits[5:10]
-		shamirPartBits := shareBits[10:]
-
-		rawIndex, _ := strconv.ParseInt(indexBits, 2, 64)
-		rawThreshold, _ := strconv.ParseInt(thresholdBits, 2, 64)
-
-		if len(shamirPartBits)%8 != 0 {
-			log.Fatal("shamir part bits must be a multiple of 8")
-		}
-		shamirPart := bits.GetBytes(shamirPartBits)
-
-		threshold := rawThreshold + 1
-		_ = threshold
-
-		xValues[i] = uint(rawIndex + 1)
-		yValues[i] = shamirPart
-	}
-	return xValues, yValues
-}
-
-func createRawShares(xValues []uint, yValues [][]byte, k uint) []*bits.SmartBuffer {
-	shares := make([]*bits.SmartBuffer, 0)
-	for i, j := range yValues {
-		share := makeShare(j, uint(i+1), k)
-		shares = append(shares, share)
-	}
-	return shares
-}
-
-func createChecksummedShares(smartBuffers []*bits.SmartBuffer) []*bits.SmartBuffer {
-	checksummedShares := make([]*bits.SmartBuffer, 0)
-	for _, j := range smartBuffers {
-		checksummedShare := j.GetChecksummedBuffer()
-		checksummedShares = append(checksummedShares, checksummedShare)
-	}
-	return checksummedShares
-}
-
-func makeShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
+func createUnchecksummedShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
 	indexBits := bits.GetBits(byte(index-1), 5)
 	thresholdBits := bits.GetBits(byte(threshold-1), 5)
 	shamirBits := bits.GetBitsArray(shamirPart, 8)
@@ -160,13 +144,13 @@ func makeShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
 	return smartBuffer
 }
 
-func getChecksummedSecret(secret []byte) []byte {
-	checksum := cryptos.GetSha256(secret)[:2]
-	checksummedSecret := append(secret, checksum...)
+func createChecksummedSecret(unchecksummedSecret []byte) []byte {
+	checksum := cryptos.GetSha256(unchecksummedSecret)[:2]
+	checksummedSecret := append(unchecksummedSecret, checksum...)
 	return checksummedSecret
 }
 
-func getUnchecksummedSecret(checksummedSecret []byte) []byte {
+func recoverUnchecksummedSecret(checksummedSecret []byte) []byte {
 	expectedChecksum := checksummedSecret[len(checksummedSecret)-2:]
 	data := checksummedSecret[:len(checksummedSecret)-2]
 	actualChecksum := cryptos.GetSha256(data)

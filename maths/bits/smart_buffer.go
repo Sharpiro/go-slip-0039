@@ -1,6 +1,7 @@
 package bits
 
 import (
+	"bytes"
 	"go-slip-0039/cryptos"
 	"log"
 )
@@ -50,6 +51,16 @@ func (smartBuffer *SmartBuffer) GetChecksummedBuffer() *SmartBuffer {
 	checksum := smartBuffer.GetChecksum()
 	newSmartBuffer := smartBuffer.Append(checksum)
 	return newSmartBuffer
+}
+
+func (smartBuffer *SmartBuffer) GetUnchecksummedBuffer(checksumSizeBytes int) *SmartBuffer {
+	cloneBuffer := smartBuffer.Clone()
+	expectedChecksum := cloneBuffer.PopBits(checksumSizeBytes * 8)
+	actualChecksum := cryptos.GetSha256(cloneBuffer.Buffer)[:checksumSizeBytes]
+	if !bytes.Equal(expectedChecksum.Buffer, actualChecksum) {
+		log.Fatal("invalid share checksum")
+	}
+	return cloneBuffer
 }
 
 func (smartBuffer *SmartBuffer) Clone() *SmartBuffer {
