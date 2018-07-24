@@ -19,13 +19,13 @@ func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	secretBytes := []byte{9, 8, 7, 6}
 	wordLists := CreateMnemonicWordsList(3, 2, secretBytes)
 
-	if wordLists[0][0] != "acid" {
+	if wordLists[0][0] != "angry" {
 		tester.Error()
 	}
-	if wordLists[1][0] != "anger" {
+	if wordLists[1][0] != "bean" {
 		tester.Error()
 	}
-	if wordLists[2][0] != "axis" {
+	if wordLists[2][0] != "brain" {
 		tester.Error()
 	}
 }
@@ -35,29 +35,29 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 	secretBytes := cryptos.GetBytes(randomLength)
 	wordLists := CreateMnemonicWordsList(6, 3, secretBytes)
 
-	if wordLists[0][0] != "acoustic" {
+	if wordLists[0][0] != "animal" {
 		tester.Error()
 	}
-	if wordLists[1][0] != "angry" {
+	if wordLists[1][0] != "beauty" {
 		tester.Error()
 	}
-	if wordLists[2][0] != "bean" {
+	if wordLists[2][0] != "brand" {
 		tester.Error()
 	}
-	if wordLists[3][0] != "brain" {
+	if wordLists[3][0] != "category" {
 		tester.Error()
 	}
-	if wordLists[4][0] != "catch" {
+	if wordLists[4][0] != "cluster" {
 		tester.Error()
 	}
-	if wordLists[5][0] != "clump" {
+	if wordLists[5][0] != "crunch" {
 		tester.Error()
 	}
 }
 
 func TestMakeShare(tester *testing.T) {
 	shamirPart := []byte{11, 10, 5, 4, 97, 219}
-	expectedShare := []byte{0, 66, 194, 129, 65, 24, 118, 192}
+	expectedShare := []byte{8, 130, 194, 129, 65, 24, 118, 192}
 	actualShare := createUnchecksummedShare(shamirPart, 1, 2)
 	if !bytes.Equal(expectedShare, actualShare.Buffer) {
 		tester.Error()
@@ -130,9 +130,9 @@ func TestSecretSharing(tester *testing.T) {
 
 func TestRecoverFromWordShares1Byte(tester *testing.T) {
 	var shares = [][]string{
-		// strings.Split("acid world predict country obey", " "),
-		strings.Split("anger width radio engage cement", " "),
-		strings.Split("axis weather reward furnace library", " "),
+		strings.Split("angry myth faith desk small", " "),
+		// strings.Split("bean clog city human catch", " "),
+		strings.Split("brain erase special firm grid", " "),
 	}
 	expectedSecret := []byte{0xff}
 	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
@@ -147,10 +147,10 @@ func TestRecoverFromWordShares32Bytes(tester *testing.T) {
 	_ = n
 	_ = k
 	var shares = [][]string{
-		strings.Split("acoustic benefit smoke cricket primary image runway priority search symptom unique hundred coach pelican organ wealth under recall universe click grass group pave staff delay actor divert endorse shock elder", " "),
-		strings.Split("angry bulb type sausage under juice october destroy lemon spray siege wrestle heavy predict sauce hand primary rough silent resemble city hurdle lock earth insane anxiety brand surface music picture", " "),
-		// strings.Split("bean brown upset question program jewel pact coach science stadium slow usual corn primary robot jungle twist robust slush please glance idea lemon eyebrow debris animal busy similar stadium window", " "),
-		strings.Split("brain cousin code salt trouble enforce find devote mercy token animal world group ocean leaf hazard pistol menu angry repair club fresh elbow drift join device suit tackle purchase glue", " "),
+		strings.Split("animal jaguar planet elevator travel actress number rural cube betray mixture shoe exact blossom coral play apart distance today living size inmate frame entry ranch faculty eyebrow picnic layer rifle", " "),
+		strings.Split("beauty inmate theater music sadness tower chaos jewel join number theater chuckle number tray panic exclude anything brain exile pulse sugar hybrid chair rare pulse steak erase scene trick fiscal", " "),
+		// strings.Split("brand bean recall unaware raven napkin army lawn skull fuel rich other razor eyebrow code actor profit obscure fish bowl design lawn tackle design harvest make catalog edit advice rapid", " "),
+		strings.Split("category filter rough piano vivid moment master city parade knife share radar else token moment elbow december impact misery artefact hybrid scorpion pluck torch swift harbor lift token cross edge", " "),
 	}
 	// "13f253e7a4712e2b9a08da7a07e1a5a067ae92adb3fa13649966690c39d901ce"
 	expectedSecret := []byte{19, 242, 83, 231, 164, 113, 46, 43, 154, 8, 218, 122, 7, 225, 165, 160, 103, 174, 146, 173, 179, 250, 19, 100, 153, 102, 105, 12, 57, 217, 1, 206}
@@ -162,8 +162,9 @@ func TestRecoverFromWordShares32Bytes(tester *testing.T) {
 
 func TestRecoverFromWordShares(tester *testing.T) {
 	var shares = [][]string{
-		[]string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"},
-		[]string{"axis", "awake", "desert", "awkward", "bread", "thunder", "rude", "timber"},
+		strings.Split("angry axis cycle analyst line morning measure exercise", " "),
+		strings.Split("bean direct adapt cross public erase level drift", " "),
+		strings.Split("brain cheap beyond firm repeat aerobic prison academic", " "),
 	}
 	expectedSecret := []byte{9, 8, 7, 6}
 	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
@@ -174,9 +175,11 @@ func TestRecoverFromWordShares(tester *testing.T) {
 
 func TestRecoverFromWordShares2(tester *testing.T) {
 	var shares = [][]string{
-		[]string{"acoustic", "answer", "bowl", "imitate", "adapt", "adult", "army", "agent", "early", "nice", "lock"},
-		[]string{"bean", "actress", "desert", "velvet", "again", "anything", "cover", "lizard", "drum", "manage", "image"},
-		[]string{"clump", "desert", "taxi", "gentle", "eternal", "damage", "similar", "bean", "avoid", "earth", "obtain"},
+		strings.Split("animal head debris negative artefact slush alpha frequent wash aspect warning", " "),
+		// strings.Split("beauty drink recipe december fiction again manual network source source force", " "),
+		strings.Split("brand chat other science broken slow luxury sunset decorate rare burden", " "),
+		// strings.Split("category paper recall hurt carbon ceiling thunder someone twice myself morning", " "),
+		strings.Split("cluster wire orient ordinary express used spread line believe stadium lock", " "),
 	}
 	expectedSecret := []byte{8, 7, 6, 5, 4, 3, 2, 1}
 	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))

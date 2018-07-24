@@ -71,10 +71,16 @@ func RecoverShare(share []string, secretSizeBytes int) (index, threshold uint, s
 	indexBits := unchecksummedBits[0:5]
 	thresholdBits := unchecksummedBits[5:10]
 	shamirBits := unchecksummedBits[10:]
-	indexRaw, _ := strconv.ParseInt(indexBits, 2, 64)
-	thresholdRaw, _ := strconv.ParseInt(thresholdBits, 2, 64)
-	index = uint(indexRaw) + 1
-	threshold = uint(thresholdRaw) + 1
+	indexRaw, _ := strconv.ParseUint(indexBits, 2, 64)
+	thresholdRaw, _ := strconv.ParseUint(thresholdBits, 2, 64)
+	index = uint(indexRaw)
+	if index < 1 || index > 31 {
+		log.Fatal("invalid index, must be 1 <= index <= 31")
+	}
+	threshold = uint(thresholdRaw)
+	if threshold < 1 || threshold > 31 {
+		log.Fatal("invalid threshold, must be 1 <= threshold <= 31")
+	}
 	shamirBytes = bits.GetBytes(shamirBits)
 	return index, threshold, shamirBytes
 }
@@ -134,8 +140,8 @@ func recoverChecksummedSecret(xValues []uint, yValues [][]byte) []byte {
 }
 
 func createUnchecksummedShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
-	indexBits := bits.GetBits(byte(index-1), 5)
-	thresholdBits := bits.GetBits(byte(threshold-1), 5)
+	indexBits := bits.GetBits(byte(index), 5)
+	thresholdBits := bits.GetBits(byte(threshold), 5)
 	shamirBits := bits.GetBitsArray(shamirPart, 8)
 
 	allBits := indexBits + thresholdBits + shamirBits
