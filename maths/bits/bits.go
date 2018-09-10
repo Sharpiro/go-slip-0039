@@ -35,6 +35,17 @@ func GetBytes(bits string) []byte {
 	return bytes
 }
 
+func PadShareToNearestTen(share string) string {
+	remainder := len(share) % 10
+	if remainder == 0 {
+		return share
+	}
+	paddingLength := 10 - remainder
+	padding := GetBits(0, paddingLength)
+	paddedShare := share + padding
+	return paddedShare
+}
+
 func PadBits(bits string) string {
 	finalPaddedBitsSize := int(math.Ceil(float64(len(bits))/8)) * 8
 	remainingPaddingSize := finalPaddedBitsSize - len(bits)

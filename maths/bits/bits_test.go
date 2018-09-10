@@ -57,6 +57,30 @@ func TestPadBitsNoChange(tester *testing.T) {
 	}
 }
 
+func TestPadBitsToNearestTenSize10(tester *testing.T) {
+	bits := "0101010101" // size 10
+	paddedBits := PadShareToNearestTen(bits)
+	if len(paddedBits) != 10 {
+		tester.Error()
+	}
+}
+
+func TestPadBitsToNearestTenSize8(tester *testing.T) {
+	bits := "01010111" // size 8
+	paddedBits := PadShareToNearestTen(bits)
+	if len(paddedBits) != 10 {
+		tester.Error()
+	}
+}
+
+func TestPadBitsToNearestTenSize16(tester *testing.T) {
+	bits := "0101011101010111" // size 8
+	paddedBits := PadShareToNearestTen(bits)
+	if len(paddedBits) != 20 {
+		tester.Error()
+	}
+}
+
 func TestIntToByteConversion(tester *testing.T) {
 	indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
 

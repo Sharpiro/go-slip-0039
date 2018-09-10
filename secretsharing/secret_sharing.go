@@ -12,8 +12,7 @@ import (
 
 // CreateMnemonicWordsList creates shares based off a given secret
 func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
-	checksummedSecret := createChecksummedSecret(secret)
-	xValues, yValues := createShamirData(n, k, checksummedSecret)
+	xValues, yValues := createShamirData(n, k, secret)
 
 	var mnemonicWordsList [][]string
 	for i := 0; i < len(xValues); i++ {
@@ -31,12 +30,12 @@ func RecoverSecretFromMnemonicShares(mnemonicWordsList [][]string, secretSizeByt
 	var xValues []uint
 	var yValues [][]byte
 
-	index, secretThreshold, shamirBuffer := RecoverShare(mnemonicWordsList[0], secretSizeBytes)
+	_, index, secretThreshold, shamirBuffer := RecoverShare(mnemonicWordsList[0], secretSizeBytes)
 	xValues = append(xValues, index)
 	yValues = append(yValues, shamirBuffer)
 	for i := 1; i < len(mnemonicWordsList); i++ {
 		mnemonicWords := mnemonicWordsList[i]
-		index, shareThreshold, shamirBuffer := RecoverShare(mnemonicWords, secretSizeBytes)
+		_, index, shareThreshold, shamirBuffer := RecoverShare(mnemonicWords, secretSizeBytes)
 		if shareThreshold != secretThreshold {
 			log.Fatalf("the share's threshold '%v', did not match the first share's threshold '%v'", shareThreshold, secretThreshold)
 		}
@@ -63,26 +62,30 @@ func RecoverSecretFromShamirData(xValues []uint, yValues [][]byte) []byte {
 }
 
 // RecoverShare returns full information from a share
-func RecoverShare(share []string, secretSizeBytes int) (index, threshold uint, shamirBytes []byte) {
+func RecoverShare(share []string, paddedSecretSizeBits int) (nonce, index, threshold uint, shamirBytes []byte) {
+	if len(share) < 9 {
+		log.Fatalf("invalid share, minimum share size is 9 bytes, actual was %v", len(share))
+	}
+
 	mnemonicIndexes := wordencoding.RecoverIndexes(share)
-	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes, secretSizeBytes)
-	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer(2)
+	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes, paddedSecretSizeBits)
+	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer()
 	unchecksummedBits := unchecksummedBuffer.GetBits()
-	indexBits := unchecksummedBits[0:5]
-	thresholdBits := unchecksummedBits[5:10]
-	shamirBits := unchecksummedBits[10:]
+	nonceBits := unchecksummedBits[0:20]
+	indexBits := unchecksummedBits[20:25]
+	thresholdBits := unchecksummedBits[25:30]
+	shamirBits := unchecksummedBits[30:]
+	nonceRaw, _ := strconv.ParseUint(nonceBits, 2, 64)
 	indexRaw, _ := strconv.ParseUint(indexBits, 2, 64)
 	thresholdRaw, _ := strconv.ParseUint(thresholdBits, 2, 64)
-	index = uint(indexRaw)
-	if index < 1 || index > 31 {
+	if indexRaw < 1 || indexRaw > 31 {
 		log.Fatal("invalid index, must be 1 <= index <= 31")
 	}
-	threshold = uint(thresholdRaw)
-	if threshold < 1 || threshold > 31 {
+	if thresholdRaw < 1 || thresholdRaw > 31 {
 		log.Fatal("invalid threshold, must be 1 <= threshold <= 31")
 	}
 	shamirBytes = bits.GetBytes(shamirBits)
-	return index, threshold, shamirBytes
+	return uint(nonceRaw), uint(indexRaw), uint(thresholdRaw), shamirBytes
 }
 
 func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {
@@ -140,21 +143,17 @@ func recoverChecksummedSecret(xValues []uint, yValues [][]byte) []byte {
 }
 
 func createUnchecksummedShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
+	nonceBits := bits.GetBitsArray(cryptos.GetBytes(3), 8)[:20]
 	indexBits := bits.GetBits(byte(index), 5)
 	thresholdBits := bits.GetBits(byte(threshold), 5)
 	shamirBits := bits.GetBitsArray(shamirPart, 8)
+	paddedShamirBits := bits.PadShareToNearestTen(shamirBits)
 
-	allBits := indexBits + thresholdBits + shamirBits
+	allBits := nonceBits + indexBits + thresholdBits + paddedShamirBits
 	allBitsPadded := bits.PadBits(allBits)
 	bytes := bits.GetBytes(allBitsPadded)
 	smartBuffer := bits.SmartBufferFromBytes(bytes, len(allBits))
 	return smartBuffer
-}
-
-func createChecksummedSecret(unchecksummedSecret []byte) []byte {
-	checksum := cryptos.GetSha256(unchecksummedSecret)[:2]
-	checksummedSecret := append(unchecksummedSecret, checksum...)
-	return checksummedSecret
 }
 
 func recoverUnchecksummedSecret(checksummedSecret []byte) []byte {

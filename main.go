@@ -55,10 +55,10 @@ func main() {
 					Value: "",
 					Usage: "an optional passphrase for generating a seed",
 				},
-				cli.IntFlag{
-					Name:  "size, s",
-					Usage: "the size in bits of the master secret",
-				},
+				// cli.IntFlag{
+				// 	Name:  "size, s",
+				// 	Usage: "the size in bits of the master secret",
+				// },
 			},
 			Action: recover,
 		},
@@ -95,13 +95,8 @@ func create(context *cli.Context) {
 }
 
 func recover(context *cli.Context) {
-	secretSizeBits := context.Int("size")
-	if secretSizeBits < 1 {
-		log.Fatal("must provide size in bits of master secert to be recovered")
-	}
-	secretSizeBytes := secretSizeBits / 8
 	protected := context.Bool("protected")
-	xValues, yValues := readShares(protected, secretSizeBytes)
+	xValues, yValues := readShares(protected)
 	passPhrase := context.String("passphrase")
 
 	recoveredSecretBytes := secretsharing.RecoverSecretFromShamirData(xValues, yValues)
@@ -113,16 +108,18 @@ func recover(context *cli.Context) {
 	fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
-func readShares(protected bool, secretSizeBytes int) (xValues []uint, yValues [][]byte) {
+func readShares(protected bool) (xValues []uint, yValues [][]byte) {
 	var wordLists [][]string
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Printf("please enter first share:\n")
 	firstShare := readShare(reader, protected)
+	paddedSecretSizeBits := len(firstShare) * 10
 
 	wordLists = append(wordLists, firstShare)
-	index, secretThreshold, shamirBuffer := secretsharing.RecoverShare(firstShare, secretSizeBytes)
-	shareThreshold := secretThreshold
+	secretNonce, index, secretThreshold, shamirBuffer := secretsharing.RecoverShare(firstShare, paddedSecretSizeBits)
+	var shareThreshold uint
+	var shareNonce uint
 	xValues = append(xValues, index)
 	yValues = append(yValues, shamirBuffer)
 	indexMap := map[uint]bool{index: true}
@@ -131,8 +128,11 @@ func readShares(protected bool, secretSizeBytes int) (xValues []uint, yValues []
 	for i := uint(1); i < secretThreshold; i++ {
 		fmt.Printf("please enter share %v/%v:\n", i+1, secretThreshold)
 		share := readShare(reader, protected)
-		index, shareThreshold, shamirBuffer = secretsharing.RecoverShare(share, secretSizeBytes)
+		shareNonce, index, shareThreshold, shamirBuffer = secretsharing.RecoverShare(share, paddedSecretSizeBits)
 		fmt.Printf("index: '%v' threshold: '%v'\n\n", index, shareThreshold)
+		if shareNonce != secretNonce {
+			log.Fatalf("the share's nonce '%v', did not match the first share's nonce '%v'", shareNonce, secretNonce)
+		}
 		if shareThreshold != secretThreshold {
 			log.Fatalf("the share's threshold '%v', did not match the first share's threshold '%v'", shareThreshold, secretThreshold)
 		}

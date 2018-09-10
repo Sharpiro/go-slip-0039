@@ -1,7 +1,6 @@
 package bits
 
 import (
-	"bytes"
 	"go-slip-0039/cryptos"
 	"log"
 )
@@ -12,15 +11,16 @@ type SmartBuffer struct {
 	Size   int
 }
 
-func (smartBuffer *SmartBuffer) GetChecksum() []byte {
-	checksum := cryptos.GetSha256(smartBuffer.Buffer)[:2]
-	return checksum
+func (smartBuffer *SmartBuffer) GetChecksum() *SmartBuffer {
+	checksumBytes := cryptos.GetSha256(smartBuffer.Buffer)[:4]
+	checksumSmartBuffer := SmartBufferFromBytes(checksumBytes, 30)
+	return checksumSmartBuffer
 }
 
-func (smartBuffer *SmartBuffer) Append(buffer []byte) *SmartBuffer {
-	smartBufferBits := GetBitsArray(smartBuffer.Buffer, 8)[:smartBuffer.Size]
-	bufferBits := GetBitsArray(buffer, 8)
-	combinedBits := smartBufferBits + bufferBits
+func (thisBuffer *SmartBuffer) Append(otherBuffer *SmartBuffer) *SmartBuffer {
+	thisBufferBits := thisBuffer.GetBits()
+	otherBufferBits := otherBuffer.GetBits()
+	combinedBits := thisBufferBits + otherBufferBits
 	newSmartBuffer := SmartBufferFromBits(combinedBits)
 	return newSmartBuffer
 }
@@ -53,11 +53,13 @@ func (smartBuffer *SmartBuffer) GetChecksummedBuffer() *SmartBuffer {
 	return newSmartBuffer
 }
 
-func (smartBuffer *SmartBuffer) GetUnchecksummedBuffer(checksumSizeBytes int) *SmartBuffer {
+func (smartBuffer *SmartBuffer) GetUnchecksummedBuffer() *SmartBuffer {
+	const checksumSize int = 30
 	cloneBuffer := smartBuffer.Clone()
-	expectedChecksum := cloneBuffer.PopBits(checksumSizeBytes * 8)
-	actualChecksum := cryptos.GetSha256(cloneBuffer.Buffer)[:checksumSizeBytes]
-	if !bytes.Equal(expectedChecksum.Buffer, actualChecksum) {
+	expectedChecksum := cloneBuffer.PopBits(checksumSize)
+	actualChecksum := cloneBuffer.GetChecksum()
+	// actualChecksum := cryptos.GetSha256(cloneBuffer.Buffer)[:4]
+	if !expectedChecksum.Equals(actualChecksum) {
 		log.Fatal("invalid share checksum")
 	}
 	return cloneBuffer
@@ -67,6 +69,13 @@ func (smartBuffer *SmartBuffer) Clone() *SmartBuffer {
 	clonedBuffer := make([]byte, len(smartBuffer.Buffer))
 	copy(clonedBuffer, smartBuffer.Buffer)
 	return SmartBufferFromBytes(clonedBuffer, smartBuffer.Size)
+}
+
+func (thisBuffer *SmartBuffer) Equals(otherBuffer *SmartBuffer) bool {
+	thisBufferBits := thisBuffer.GetBits()
+	otherBufferBits := otherBuffer.GetBits()
+	areEqual := thisBufferBits == otherBufferBits
+	return areEqual
 }
 
 func SmartBufferFromBytes(buffer []byte, sizeBits int) *SmartBuffer {
