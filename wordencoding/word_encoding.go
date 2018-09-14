@@ -5,9 +5,9 @@ import (
 	"log"
 )
 
-func CreateIndexList(checksummedBuffer *bits.SmartBuffer, secretSizeBytes int) []uint {
+func CreateIndexList(checksummedBuffer *bits.SmartBuffer) []uint {
 	indexList := bits.HexToPower2(checksummedBuffer.Buffer, 10)
-	indexList = bits.ResizeWordIndex(indexList, secretSizeBytes)
+	indexList = bits.ResizeWordIndex(indexList, checksummedBuffer.Size)
 	return indexList
 }
 
@@ -22,10 +22,10 @@ func CreateMnemonicWords(mnemonicIndexes []uint) []string {
 	return words
 }
 
-func RecoverChecksummedBuffer(indexList []uint, paddedSecretSizeBits int) *bits.SmartBuffer {
+func RecoverChecksummedBuffer(indexList []uint, shareLengthBits int) *bits.SmartBuffer {
 	allBytes := bits.Power2ToHex(indexList, 10)
 	// bytesResized := bits.ResizeBytes(allBytes, secretSizeBytes)
-	bufferBitSize := 20 + 5 + 5 + paddedSecretSizeBits + 30
+	bufferBitSize := 20 + 5 + 5 + shareLengthBits + 30
 	smartBuffer := bits.SmartBufferFromBytes(allBytes, bufferBitSize)
 	return smartBuffer
 }

@@ -114,10 +114,11 @@ func readShares(protected bool) (xValues []uint, yValues [][]byte) {
 
 	fmt.Printf("please enter first share:\n")
 	firstShare := readShare(reader, protected)
-	paddedSecretSizeBits := len(firstShare) * 10
+	totalLengthBits := len(firstShare) * 10
+	shareLengthBits := totalLengthBits - 20 - 5 - 5 - 30
 
 	wordLists = append(wordLists, firstShare)
-	secretNonce, index, secretThreshold, shamirBuffer := secretsharing.RecoverShare(firstShare, paddedSecretSizeBits)
+	secretNonce, index, secretThreshold, shamirBuffer := secretsharing.RecoverShare(firstShare, shareLengthBits)
 	var shareThreshold uint
 	var shareNonce uint
 	xValues = append(xValues, index)
@@ -128,7 +129,7 @@ func readShares(protected bool) (xValues []uint, yValues [][]byte) {
 	for i := uint(1); i < secretThreshold; i++ {
 		fmt.Printf("please enter share %v/%v:\n", i+1, secretThreshold)
 		share := readShare(reader, protected)
-		shareNonce, index, shareThreshold, shamirBuffer = secretsharing.RecoverShare(share, paddedSecretSizeBits)
+		shareNonce, index, shareThreshold, shamirBuffer = secretsharing.RecoverShare(share, shareLengthBits)
 		fmt.Printf("index: '%v' threshold: '%v'\n\n", index, shareThreshold)
 		if shareNonce != secretNonce {
 			log.Fatalf("the share's nonce '%v', did not match the first share's nonce '%v'", shareNonce, secretNonce)

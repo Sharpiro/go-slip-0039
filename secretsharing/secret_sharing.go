@@ -18,7 +18,7 @@ func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
 	for i := 0; i < len(xValues); i++ {
 		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], k)
 		checksummedShare := unchecksummedShare.GetChecksummedBuffer()
-		indexList := wordencoding.CreateIndexList(checksummedShare, len(secret))
+		indexList := wordencoding.CreateIndexList(checksummedShare)
 		mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
 		mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
 	}
@@ -62,13 +62,13 @@ func RecoverSecretFromShamirData(xValues []uint, yValues [][]byte) []byte {
 }
 
 // RecoverShare returns full information from a share
-func RecoverShare(share []string, paddedSecretSizeBits int) (nonce, index, threshold uint, shamirBytes []byte) {
-	if len(share) < 9 {
-		log.Fatalf("invalid share, minimum share size is 9 bytes, actual was %v", len(share))
+func RecoverShare(share []string, shareLengthBits int) (nonce, index, threshold uint, shamirBytes []byte) {
+	if len(share) < 7 {
+		log.Fatalf("invalid share, minimum share size is 7 words, actual was %v", len(share))
 	}
 
 	mnemonicIndexes := wordencoding.RecoverIndexes(share)
-	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes, paddedSecretSizeBits)
+	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes, shareLengthBits)
 	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer()
 	unchecksummedBits := unchecksummedBuffer.GetBits()
 	nonceBits := unchecksummedBits[0:20]

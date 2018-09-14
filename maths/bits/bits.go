@@ -118,13 +118,13 @@ func HexToPower2(data []byte, p uint) []uint {
 }
 
 // ResizeWordIndex resizes a base 1024 array based upon the original entropy size
-func ResizeWordIndex(data []uint, entropySizeBytes int) []uint {
-	lineBits := (entropySizeBytes*8 + 42)
+func ResizeWordIndex(data []uint, shareSizeBits int) []uint {
+	// lineBits := (shareSizeBits*8 + 42)
 	var xyz int
-	if xyz = 0; lineBits%10 != 0 {
+	if xyz = 0; shareSizeBits%10 != 0 {
 		xyz = 1
 	}
-	newSize := lineBits/10 + xyz
+	newSize := shareSizeBits/10 + xyz
 	data = data[:newSize]
 	return data
 }

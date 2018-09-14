@@ -10,13 +10,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 var _tester *testing.T
 
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
-	secretBytes := []byte{9, 8, 7, 6}
+	// secretBytes := []byte{9, 8, 7, 6}
+	secretBytes := []byte{9}
 	wordLists := CreateMnemonicWordsList(3, 2, secretBytes)
 
 	if wordLists[0][0] != "angry" {
@@ -79,14 +79,14 @@ func TestGetChecksummedShare(tester *testing.T) {
 	}
 }
 
-func TestToIndexList(tester *testing.T) {
-	checksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
-	expectedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576, 0}
-	actualIndexList := bits.HexToPower2(checksummedShare.Buffer, 10)
-	if !reflect.DeepEqual(expectedIndexList, actualIndexList) {
-		tester.Error()
-	}
-}
+// func TestToIndexList(tester *testing.T) {
+// 	checksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
+// 	expectedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576, 0}
+// 	actualIndexList := bits.HexToPower2(checksummedShare.Buffer, 10)
+// 	if !reflect.DeepEqual(expectedIndexList, actualIndexList) {
+// 		tester.Error()
+// 	}
+// }
 
 func TestToIndexListResized(tester *testing.T) {
 	secretSizeBytes := 4
@@ -108,23 +108,6 @@ func TestBackToUnchecksummedShare(tester *testing.T) {
 	}
 	if !reflect.DeepEqual(expectedUnchecksummedShare.Buffer, actualUnchecksummedShare.Buffer) {
 		tester.Error()
-	}
-}
-
-func TestSecretSharing(tester *testing.T) {
-	_tester = tester
-	mathRandom.Seed(time.Now().UTC().UnixNano())
-	for i := 0; i < 100; i++ {
-		randomN := uint(mathRandom.Intn(31) + 2)             // 2 <= randomN <= 32
-		randomK := uint(mathRandom.Intn(int(randomN-1)) + 2) // 2 <= randomK <= randomN
-		randomLength := mathRandom.Intn(64) + 1
-		secretBytes := cryptos.GetBytes(randomLength)
-		xValues, yValues := createShamirData(randomN, randomK, secretBytes)
-		assertEqual(secretBytes, recoverChecksummedSecret(xValues, yValues))
-		for j := 0; j < 10; j++ {
-			randXValues, randYValues := getRandomSlices(xValues, yValues, randomK)
-			assertEqual(secretBytes, recoverChecksummedSecret(randXValues, randYValues))
-		}
 	}
 }
 
@@ -203,6 +186,11 @@ func TestSecretSharingWords(tester *testing.T) {
 	}
 }
 
+func TestRecoverShare(tester *testing.T) {
+	share := strings.Split("actress anchor angry wolf league target circle", " ")
+	RecoverShare(share, 10)
+}
+
 // func TestGetChecksummedSecret(tester *testing.T) {
 // 	data := []byte("data")
 // 	hash := cryptos.GetSha256(data)[:2]
@@ -212,6 +200,23 @@ func TestSecretSharingWords(tester *testing.T) {
 // 	}
 // 	if !bytes.Equal(hash, css[4:]) {
 // 		tester.Error()
+// 	}
+// }
+
+// func TestSecretSharing(tester *testing.T) {
+// 	_tester = tester
+// 	mathRandom.Seed(time.Now().UTC().UnixNano())
+// 	for i := 0; i < 100; i++ {
+// 		randomN := uint(mathRandom.Intn(31) + 2)             // 2 <= randomN <= 32
+// 		randomK := uint(mathRandom.Intn(int(randomN-1)) + 2) // 2 <= randomK <= randomN
+// 		randomLength := mathRandom.Intn(64) + 1
+// 		secretBytes := cryptos.GetBytes(randomLength)
+// 		xValues, yValues := createShamirData(randomN, randomK, secretBytes)
+// 		assertEqual(secretBytes, recoverChecksummedSecret(xValues, yValues))
+// 		for j := 0; j < 10; j++ {
+// 			randXValues, randYValues := getRandomSlices(xValues, yValues, randomK)
+// 			assertEqual(secretBytes, recoverChecksummedSecret(randXValues, randYValues))
+// 		}
 // 	}
 // }
 
