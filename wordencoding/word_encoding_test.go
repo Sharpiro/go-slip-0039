@@ -18,7 +18,7 @@ func TestGetMnemonic(tester *testing.T) {
 func TestBackToIndexList(tester *testing.T) {
 	mnemonicWords := []string{"acid", "arena", "clown", "exhaust", "bracket", "system", "problem", "morning"}
 	expectedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	actualIndexList := RecoverIndexes(mnemonicWords)
+	actualIndexList := RecoverIndexList(mnemonicWords)
 	if !reflect.DeepEqual(expectedIndexList, actualIndexList) {
 		tester.Error()
 	}
@@ -28,9 +28,9 @@ func TestBackToIndexList(tester *testing.T) {
 
 func TestBackToChecksummedShare(tester *testing.T) {
 	indexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	entropySizeBytes := 4
+	// entropySizeBytes := 4
 	expectedChecksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
-	actualChecksummedShare := RecoverChecksummedBuffer(indexList, entropySizeBytes)
+	actualChecksummedShare := RecoverChecksummedBuffer(indexList)
 	if expectedChecksummedShare.Size != actualChecksummedShare.Size {
 		tester.Error()
 	}
@@ -62,7 +62,7 @@ func TestGetWordList(tester *testing.T) {
 
 func TestGetIndexList(tester *testing.T) {
 	wordList := []string{"bridge", "alcohol", "cousin", "winter", "actor"}
-	indexList := RecoverIndexes(wordList)
+	indexList := RecoverIndexList(wordList)
 
 	if indexList[0] != 102 {
 		tester.Error()

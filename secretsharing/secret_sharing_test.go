@@ -88,15 +88,15 @@ func TestGetChecksummedShare(tester *testing.T) {
 // 	}
 // }
 
-func TestToIndexListResized(tester *testing.T) {
-	secretSizeBytes := 4
-	indexList := []uint{1, 44, 160, 321, 97, 878, 682, 576, 0}
-	expectedResizedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
-	actualResizedIndexList := bits.ResizeWordIndex(indexList, secretSizeBytes)
-	if !reflect.DeepEqual(expectedResizedIndexList, actualResizedIndexList) {
-		tester.Error()
-	}
-}
+// func TestToIndexListResized(tester *testing.T) {
+// 	secretSizeBytes := 4
+// 	indexList := []uint{1, 44, 160, 321, 97, 878, 682, 576, 0}
+// 	expectedResizedIndexList := []uint{1, 44, 160, 321, 97, 878, 682, 576}
+// 	actualResizedIndexList := bits.ResizeWordIndex(indexList, secretSizeBytes)
+// 	if !reflect.DeepEqual(expectedResizedIndexList, actualResizedIndexList) {
+// 		tester.Error()
+// 	}
+// }
 
 func TestBackToUnchecksummedShare(tester *testing.T) {
 	checksummedShare := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 234, 170, 64}, 74)
@@ -118,7 +118,7 @@ func TestRecoverFromWordShares1Byte(tester *testing.T) {
 		strings.Split("brain erase special firm grid", " "),
 	}
 	expectedSecret := []byte{0xff}
-	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares)
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -137,7 +137,7 @@ func TestRecoverFromWordShares32Bytes(tester *testing.T) {
 	}
 	// "13f253e7a4712e2b9a08da7a07e1a5a067ae92adb3fa13649966690c39d901ce"
 	expectedSecret := []byte{19, 242, 83, 231, 164, 113, 46, 43, 154, 8, 218, 122, 7, 225, 165, 160, 103, 174, 146, 173, 179, 250, 19, 100, 153, 102, 105, 12, 57, 217, 1, 206}
-	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares)
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -150,7 +150,7 @@ func TestRecoverFromWordShares(tester *testing.T) {
 		strings.Split("brain cheap beyond firm repeat aerobic prison academic", " "),
 	}
 	expectedSecret := []byte{9, 8, 7, 6}
-	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares)
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -165,7 +165,7 @@ func TestRecoverFromWordShares2(tester *testing.T) {
 		strings.Split("cluster wire orient ordinary express used spread line believe stadium lock", " "),
 	}
 	expectedSecret := []byte{8, 7, 6, 5, 4, 3, 2, 1}
-	actualSecret := RecoverSecretFromMnemonicShares(shares, len(expectedSecret))
+	actualSecret := RecoverSecretFromMnemonicShares(shares)
 	if !bytes.Equal(expectedSecret, actualSecret) {
 		tester.Error()
 	}
@@ -177,7 +177,7 @@ func TestSecretSharingWords(tester *testing.T) {
 			byteLength := i + 1
 			actualSecret := cryptos.GetBytes(byteLength)
 			wordShares := CreateMnemonicWordsList(6, 3, actualSecret)
-			expectedSecret := RecoverSecretFromMnemonicShares(wordShares, byteLength)
+			expectedSecret := RecoverSecretFromMnemonicShares(wordShares)
 
 			if !bytes.Equal(actualSecret, expectedSecret) {
 				tester.Error("secrets do not match")
@@ -188,7 +188,18 @@ func TestSecretSharingWords(tester *testing.T) {
 
 func TestRecoverShare(tester *testing.T) {
 	share := strings.Split("actress anchor angry wolf league target circle", " ")
-	RecoverShare(share, 10)
+	RecoverShare(share)
+}
+
+func TestRecoverSecretFromMnemonicShares(tester *testing.T) {
+	shares := [][]string{
+		strings.Split("actress anchor angry wolf league target circle", " "),
+		strings.Split("actress anchor brain wealth jaguar stage music", " "),
+	}
+	secret := RecoverSecretFromMnemonicShares(shares)
+	if len(secret) != 1 || secret[0] != 255 {
+		tester.Error()
+	}
 }
 
 // func TestGetChecksummedSecret(tester *testing.T) {
