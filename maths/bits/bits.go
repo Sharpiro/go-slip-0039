@@ -23,6 +23,9 @@ func GetBitsArray(buffer []byte, padding int) string {
 }
 
 func GetBytes(bits string) []byte {
+	if len(bits)%8 != 0 {
+		log.Fatal("bits string length must be a multiple of 8")
+	}
 	bytes := make([]byte, 0)
 	for i := 0; i < len(bits); i += 8 {
 		data := bits[i : i+8]
@@ -33,6 +36,24 @@ func GetBytes(bits string) []byte {
 		bytes = append(bytes, byte(parsed))
 	}
 	return bytes
+}
+
+func PadShareToNearestTen(share string) string {
+	remainder := len(share) % 10
+	if remainder == 0 {
+		return share
+	}
+	paddingLength := 10 - remainder
+	padding := GetBits(0, paddingLength)
+	paddedShare := share + padding
+	return paddedShare
+}
+
+func StripPaddingFromNearestTen(bits string) string {
+	bitsToStrip := len(bits) % 8
+	bitsToTake := len(bits) - bitsToStrip
+	strippedBits := bits[:bitsToTake]
+	return strippedBits
 }
 
 func PadBits(bits string) string {
@@ -104,118 +125,4 @@ func HexToPower2(data []byte, p uint) []uint {
 	last := bitholder << (p - bitsread)
 	output = append(output, last)
 	return output
-}
-
-// ResizeWordIndex resizes a base 1024 array based upon the original entropy size
-func ResizeWordIndex(data []uint, entropySizeBytes int) []uint {
-	lineBits := (entropySizeBytes*8 + 42)
-	var xyz int
-	if xyz = 0; lineBits%10 != 0 {
-		xyz = 1
-	}
-	newSize := lineBits/10 + xyz
-	data = data[:newSize]
-	return data
-}
-
-// ResizeBytes resizes bytes
-func ResizeBytes(data []byte, entropySizeBytes int) []byte {
-	lineBits := float64(entropySizeBytes*8 + 42)
-	fullByteSize := int(math.Ceil(lineBits / 8))
-	return data[:fullByteSize]
-}
-
-// ReverseBitsBigEndian returns a byte array
-func ReverseBitsBigEndian(indexes []uint, byteSize, splitSize, totalBits int) []byte {
-	createdBytes := make([]byte, 0, len(indexes))
-	var currentByte uint
-	power := byteSize - 1
-	for i, x := range indexes {
-		for j := getJ(i, len(indexes), splitSize, byteSize, totalBits); j >= 0; j-- {
-			bit := x & (1 << uint(j)) >> uint(j)
-			// fmt.Print(bit)
-			if bit == 1 {
-				currentByte += (1 << uint(power))
-			}
-			totalBits--
-			power--
-			if power == -1 {
-				// fmt.Println("\n---------------")
-				createdBytes = append(createdBytes, byte(currentByte))
-				power = byteSize - 1
-				currentByte = 0
-			}
-		}
-	}
-	return createdBytes
-}
-
-func getJ(i, len, splitSize, byteSize, bitsRemaining int) int {
-	if len > 1 && i+1 == len && bitsRemaining < byteSize {
-		return bitsRemaining - 1
-	}
-	return splitSize - 1
-}
-
-// GetBitBlocksBigEndian gets numbers in little endian format
-func GetBitBlocksBigEndian(formattedShare []byte, byteSize int, splitSize int) []uint {
-	var createdNumbers []uint
-	var currentNumber uint
-	power := splitSize - 1
-	for i, x := range formattedShare {
-		for j := byteSize - 1; j >= 0; j-- {
-			bit := x & (1 << uint(j)) >> uint(j)
-			// fmt.Print(bit)
-			if bit == 1 {
-				currentNumber += (1 << uint(power))
-			}
-			power--
-			if power == -1 {
-				// fmt.Println("\n---------------")
-				createdNumbers = append(createdNumbers, currentNumber)
-				if i+1 == len(formattedShare) {
-					power = j - 1
-				} else {
-					power = splitSize - 1
-				}
-				currentNumber = 0
-			}
-		}
-	}
-	if power != -1 {
-		createdNumbers = append(createdNumbers, currentNumber)
-	}
-	return createdNumbers
-}
-
-// GetBitBlocksLittleEndian gets numbers in big endian format
-func GetBitBlocksLittleEndian(formattedShare []byte, byteSize uint, splitSize int) []uint {
-	createdNumbers := make([]uint, 0, 30)
-	var currentNumber uint
-	power := splitSize - 1
-	for i := 0; i < len(formattedShare); i++ {
-		x := formattedShare[i]
-		for j := uint(0); j < byteSize; j++ {
-			bit := x & (1 << j) >> j
-			// fmt.Print(bit)
-			if bit == 1 {
-				currentNumber += (1 << uint(power))
-			}
-			power--
-			if power == -1 {
-				// fmt.Println("\n---------------")
-				createdNumbers = append(createdNumbers, currentNumber)
-				if i+1 == len(formattedShare) {
-					power = int(byteSize - j - 2)
-				} else {
-					power = splitSize - 1
-				}
-				currentNumber = 0
-			}
-		}
-	}
-	if power != -1 {
-		createdNumbers = append(createdNumbers, currentNumber)
-	}
-	return createdNumbers
 }
