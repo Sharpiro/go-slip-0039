@@ -40,3 +40,7 @@ func TestCreatePbkdf2Bytes(tester *testing.T) {
 		tester.Error("hash mismatch")
 	}
 }
+
+func TestAes(tester *testing.T) {
+	EncryptAes(make([]byte, 16), []byte{})
+}

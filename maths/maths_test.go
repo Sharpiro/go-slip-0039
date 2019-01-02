@@ -3,8 +3,22 @@ package maths
 import (
 	"testing"
 
+	gfLogMaths "go-slip-0039/maths/gflogmaths"
 	gfArith "go-slip-0039/maths/gfmaths"
 )
+
+func TestGfMultiplyAll(tester *testing.T) {
+	for i := uint(0x00); i <= 0xff; i++ {
+		for j := uint(0x00); j <= 0xff; j++ {
+			regResult := gfArith.Multiply(i, j)
+			tableResult := gfLogMaths.Multiply(i, j)
+
+			if regResult != tableResult {
+				tester.Errorf("regResult %v, tableResult %v", regResult, tableResult)
+			}
+		}
+	}
+}
 
 func TestGetPolynomialDegree(tester *testing.T) {
 	polynomial := []byte{1, 0, 0, 0, 1, 1, 0, 1, 1}

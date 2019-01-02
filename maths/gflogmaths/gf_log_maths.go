@@ -20,7 +20,10 @@ func Multiply(a, b uint) uint {
 	if a == 0 || b == 0 {
 		return 0
 	}
-	return exp[log[a]+log[b]]
+	logA := log[a]
+	logB := log[b]
+	exp := exp[logA+logB]
+	return exp
 }
 
 // Inverse gets the inverse of a number given a polynomial
