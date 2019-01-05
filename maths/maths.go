@@ -30,10 +30,10 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 
 // CreateRandomPolynomial creates a random polynomial of the given degree
 func CreateRandomPolynomial(degree uint) []byte {
-	randomBytes := cryptos.GetBytes(int(degree) + 1)
+	randomBytes := cryptos.GetRandomBytes(int(degree) + 1)
 	// randomBytes := make([]byte, degree+1, degree+1)
 	for getPolynomialDegree(randomBytes) != degree {
-		randomBytes = cryptos.GetBytes(int(degree) + 1)
+		randomBytes = cryptos.GetRandomBytes(int(degree) + 1)
 		// if _, err := rand.Read(randomBytes); err != nil {
 		// 	log.Fatal("an error occurred generating random bytes")
 		// }

@@ -11,12 +11,14 @@ import (
 )
 
 // CreateMnemonicWordsList creates shares based off a given secret
-func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
-	xValues, yValues := createShamirData(n, k, secret)
+func CreateMnemonicWordsList(mTotalShares, tThreshold uint, secret []byte, passphrase string) [][]string {
+	sharedIdentifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(4), 8)[:30]
+	preMasterSecret := masterSecretDerivationFunction(secret, passphrase, sharedIdentifierBits, tThreshold)
+	xValues, yValues := createShamirData(mTotalShares, tThreshold, preMasterSecret)
 
 	var mnemonicWordsList [][]string
 	for i := 0; i < len(xValues); i++ {
-		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], k)
+		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], tThreshold)
 		checksummedShare := unchecksummedShare.GetChecksummedBuffer()
 		indexList := wordencoding.CreateIndexList(checksummedShare)
 		mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
@@ -90,6 +92,12 @@ func RecoverShare(share []string) (nonce, index, threshold uint, shamirBytes []b
 	return uint(nonceRaw), uint(indexRaw), uint(thresholdRaw), shamirBytes
 }
 
+func masterSecretDerivationFunction(secret []byte, passphrase string, sharedIdentifier string, threshold uint) []byte {
+	key := cryptos.CreatePbkdf2Hash
+	_ = key
+	return nil
+}
+
 func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {
 	if n < k {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
@@ -145,7 +153,7 @@ func recoverSecret(xValues []uint, yValues [][]byte) []byte {
 }
 
 func createUnchecksummedShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
-	identifierBits := bits.GetBitsArray(cryptos.GetBytes(3), 8)[:20]
+	identifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(3), 8)[:20]
 	indexBits := bits.GetBits(byte(index), 5)
 	thresholdBits := bits.GetBits(byte(threshold), 5)
 	shareValueBits := bits.GetBitsArray(shamirPart, 8)

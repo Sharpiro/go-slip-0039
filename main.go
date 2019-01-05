@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
-	"go-slip-0039/cryptos"
 	"go-slip-0039/secretsharing"
 	"log"
 	"os"
@@ -86,7 +85,7 @@ func create(context *cli.Context) {
 	if err != nil {
 		log.Fatal("an error occurred decoding the hex string to bytes")
 	}
-	shares := secretsharing.CreateMnemonicWordsList(uint(n), uint(k), secretBytes)
+	shares := secretsharing.CreateMnemonicWordsList(uint(n), uint(k), secretBytes, "")
 	replacer := strings.NewReplacer("[", "", "]", "")
 	for _, share := range shares {
 		formattedShare := replacer.Replace(fmt.Sprint(share))
@@ -97,15 +96,15 @@ func create(context *cli.Context) {
 func recover(context *cli.Context) {
 	protected := context.Bool("protected")
 	xValues, yValues := readShares(protected)
-	passPhrase := context.String("passphrase")
+	// passPhrase := context.String("passphrase")
 
 	recoveredSecretBytes := secretsharing.RecoverSecretFromShamirData(xValues, yValues)
 	recoveredSecret := hex.EncodeToString(recoveredSecretBytes)
-	generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
-	generatedSeedHex := hex.EncodeToString(generatedSeed)
+	// generatedSeed := cryptos.CreatePbkdf2Seed(recoveredSecretBytes, passPhrase)
+	// generatedSeedHex := hex.EncodeToString(generatedSeed)
 
 	fmt.Printf("recovered secret: %v\n", recoveredSecret)
-	fmt.Printf("generated seed: %v\n", generatedSeedHex)
+	// fmt.Printf("generated seed: %v\n", generatedSeedHex)
 }
 
 func readShares(protected bool) (xValues []uint, yValues [][]byte) {
