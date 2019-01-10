@@ -13,8 +13,8 @@ import (
 // CreateMnemonicWordsList creates shares based off a given secret
 func CreateMnemonicWordsList(mTotalShares, tThreshold uint, secret []byte, passphrase string) [][]string {
 	sharedIdentifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(4), 8)[:30]
-	preMasterSecret := masterSecretDerivationFunction(secret, passphrase, sharedIdentifierBits, tThreshold)
-	xValues, yValues := createShamirData(mTotalShares, tThreshold, preMasterSecret)
+	encryptionKey := getEncryptionKey(passphrase, sharedIdentifierBits, tThreshold)
+	xValues, yValues := createShamirData(mTotalShares, tThreshold, encryptionKey)
 
 	var mnemonicWordsList [][]string
 	for i := 0; i < len(xValues); i++ {
@@ -90,12 +90,6 @@ func RecoverShare(share []string) (nonce, index, threshold uint, shamirBytes []b
 	strippedShamirBits := bits.StripPaddingFromNearestTen(shamirBits)
 	shamirBytes = bits.GetBytes(strippedShamirBits)
 	return uint(nonceRaw), uint(indexRaw), uint(thresholdRaw), shamirBytes
-}
-
-func masterSecretDerivationFunction(secret []byte, passphrase string, sharedIdentifier string, threshold uint) []byte {
-	key := cryptos.CreatePbkdf2Hash
-	_ = key
-	return nil
 }
 
 func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {

@@ -80,6 +80,25 @@ func TestPadBitsToNearestTenSize16(tester *testing.T) {
 	}
 }
 
+func TestGetBytesLittleEndian(tester *testing.T) {
+	bits := "1110111001"
+	// 1110111001
+	// 0010110010
+	// 0100010000
+	bytes := GetBytesLittleEndian(bits, 2)
+	if len(bytes) != 2 {
+		tester.Error()
+	}
+
+	if bytes[0] != 185 {
+		tester.Error()
+	}
+
+	if bytes[1] != 3 {
+		tester.Error()
+	}
+}
+
 // func TestIntToByteConversion(tester *testing.T) {
 // 	indexList := []uint{130, 512, 612, 227, 732, 733, 437, 512}
 
