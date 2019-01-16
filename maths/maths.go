@@ -17,8 +17,8 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 			if i == j {
 				continue
 			}
-			numerator := gfArith.Subtract(xInput, xValues[j])
-			denominator := gfArith.Subtract(xValues[i], xValues[j])
+			numerator := gfArith.Subtract(xInput, xValues[j])       // can probably remove xinput subtraction
+			denominator := gfArith.Subtract(xValues[i], xValues[j]) // these 2 values can be probably be swapped w/o issue
 			newLi := gfArith.Divide(numerator, denominator)
 			li = gfArith.Multiply(li, newLi)
 		}
