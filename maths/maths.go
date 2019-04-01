@@ -17,8 +17,8 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 			if i == j {
 				continue
 			}
-			numerator := gfArith.Subtract(xInput, xValues[j])
-			denominator := gfArith.Subtract(xValues[i], xValues[j])
+			numerator := gfArith.Subtract(xInput, xValues[j])       // can probably remove xinput subtraction
+			denominator := gfArith.Subtract(xValues[i], xValues[j]) // these 2 values can be probably be swapped w/o issue
 			newLi := gfArith.Divide(numerator, denominator)
 			li = gfArith.Multiply(li, newLi)
 		}
@@ -30,10 +30,10 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 
 // CreateRandomPolynomial creates a random polynomial of the given degree
 func CreateRandomPolynomial(degree uint) []byte {
-	randomBytes := cryptos.GetBytes(int(degree) + 1)
+	randomBytes := cryptos.GetRandomBytes(int(degree) + 1)
 	// randomBytes := make([]byte, degree+1, degree+1)
 	for getPolynomialDegree(randomBytes) != degree {
-		randomBytes = cryptos.GetBytes(int(degree) + 1)
+		randomBytes = cryptos.GetRandomBytes(int(degree) + 1)
 		// if _, err := rand.Read(randomBytes); err != nil {
 		// 	log.Fatal("an error occurred generating random bytes")
 		// }

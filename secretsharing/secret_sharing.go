@@ -11,12 +11,14 @@ import (
 )
 
 // CreateMnemonicWordsList creates shares based off a given secret
-func CreateMnemonicWordsList(n, k uint, secret []byte) [][]string {
-	xValues, yValues := createShamirData(n, k, secret)
+func CreateMnemonicWordsList(mTotalShares, tThreshold uint, secret []byte, passphrase string) [][]string {
+	sharedIdentifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(4), 8)[:30]
+	encryptionKey := getEncryptionKey(passphrase, sharedIdentifierBits, tThreshold)
+	xValues, yValues := createShamirData(mTotalShares, tThreshold, encryptionKey)
 
 	var mnemonicWordsList [][]string
 	for i := 0; i < len(xValues); i++ {
-		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], k)
+		unchecksummedShare := createUnchecksummedShare(yValues[i], xValues[i], tThreshold)
 		checksummedShare := unchecksummedShare.GetChecksummedBuffer()
 		indexList := wordencoding.CreateIndexList(checksummedShare)
 		mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
@@ -145,13 +147,13 @@ func recoverSecret(xValues []uint, yValues [][]byte) []byte {
 }
 
 func createUnchecksummedShare(shamirPart []byte, index, threshold uint) *bits.SmartBuffer {
-	nonceBits := bits.GetBitsArray(cryptos.GetBytes(3), 8)[:20]
+	identifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(3), 8)[:20]
 	indexBits := bits.GetBits(byte(index), 5)
 	thresholdBits := bits.GetBits(byte(threshold), 5)
-	shamirBits := bits.GetBitsArray(shamirPart, 8)
-	paddedShamirBits := bits.PadShareToNearestTen(shamirBits)
+	shareValueBits := bits.GetBitsArray(shamirPart, 8)
+	paddedShareValueBits := bits.PadShareToNearestTen(shareValueBits)
 
-	allBits := nonceBits + indexBits + thresholdBits + paddedShamirBits
+	allBits := identifierBits + indexBits + thresholdBits + paddedShareValueBits
 	allBitsPadded := bits.PadBits(allBits)
 	bytes := bits.GetBytes(allBitsPadded)
 	smartBuffer := bits.SmartBufferFromBytes(bytes, len(allBits))

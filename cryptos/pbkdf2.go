@@ -6,12 +6,11 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-// CreatePbkdf2Seed creates a hash based off a given secret and an optional passphrase
-func CreatePbkdf2Seed(secret []byte, passPhrase string) []byte {
+// CreatePbkdf2Hash creates a hash based off a given secret and an optional passphrase
+func CreatePbkdf2Hash(password, salt []byte) []byte {
 	const iterations int = 20000
 	const byteLength int = 32
 
-	salt := []byte("SLIP0039" + passPhrase)
-	dk := pbkdf2.Key(secret, salt, iterations, byteLength, sha256.New)
-	return dk
+	hash := pbkdf2.Key(password, salt, iterations, byteLength, sha256.New)
+	return hash
 }

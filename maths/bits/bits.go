@@ -1,6 +1,7 @@
 package bits
 
 import (
+	"encoding/binary"
 	"log"
 	"math"
 	"strconv"
@@ -36,6 +37,24 @@ func GetBytes(bits string) []byte {
 		bytes = append(bytes, byte(parsed))
 	}
 	return bytes
+}
+
+func GetBytesLittleEndian(bits string, byteSize int) []byte {
+	number, err := strconv.ParseInt(bits, 2, byteSize*8)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bytesLittleEndian := make([]byte, byteSize)
+	switch byteSize {
+	case 2:
+		binary.LittleEndian.PutUint16(bytesLittleEndian, uint16(number))
+	case 4:
+		binary.LittleEndian.PutUint32(bytesLittleEndian, uint32(number))
+	default:
+		log.Fatal("'byteSize' must be of size 2 or 4")
+	}
+	return bytesLittleEndian
 }
 
 func PadShareToNearestTen(share string) string {

@@ -17,7 +17,7 @@ var _tester *testing.T
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	// secretBytes := []byte{9, 8, 7, 6}
 	secretBytes := []byte{9}
-	wordLists := CreateMnemonicWordsList(3, 2, secretBytes)
+	wordLists := CreateMnemonicWordsList(3, 2, secretBytes, "")
 
 	if wordLists[0][0] != "angry" {
 		tester.Error()
@@ -32,8 +32,8 @@ func TestShareIndexAndThresholdSimple(tester *testing.T) {
 
 func TestShareIndexAndThreshold(tester *testing.T) {
 	randomLength := 32
-	secretBytes := cryptos.GetBytes(randomLength)
-	wordLists := CreateMnemonicWordsList(6, 3, secretBytes)
+	secretBytes := cryptos.GetRandomBytes(randomLength)
+	wordLists := CreateMnemonicWordsList(6, 3, secretBytes, "")
 
 	if wordLists[0][0] != "animal" {
 		tester.Error()
@@ -175,8 +175,8 @@ func TestSecretSharingWords(tester *testing.T) {
 	for j := 0; j < 10; j++ {
 		for i := 5; i < 64; i++ {
 			byteLength := i + 1
-			actualSecret := cryptos.GetBytes(byteLength)
-			wordShares := CreateMnemonicWordsList(6, 3, actualSecret)
+			actualSecret := cryptos.GetRandomBytes(byteLength)
+			wordShares := CreateMnemonicWordsList(6, 3, actualSecret, "")
 			expectedSecret := RecoverSecretFromMnemonicShares(wordShares)
 
 			if !bytes.Equal(actualSecret, expectedSecret) {
