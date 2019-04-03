@@ -96,31 +96,39 @@ func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {
 	if n < k {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
+	checksum := make([]byte, 32)
+	_ = checksum
 	secretLen := len(secret)
-	values := make([][]byte, n)
-	for i := range values {
-		values[i] = make([]byte, secretLen)
+	shareBuffers := make([][]byte, n)
+	for i := range shareBuffers {
+		shareBuffers[i] = make([]byte, secretLen)
 	}
 
 	// for each byte in the secret
 	for i := 0; i < secretLen; i++ {
 		randomPolynomial := maths.CreateRandomPolynomial(k - 1)
-		randomPolynomial[0] = secret[i]
+		randomPolynomial = append(randomPolynomial, (make([]byte, 256-k))...)
+		randomPolynomial[254] = 255 // todo: checksum
+		randomPolynomial[255] = secret[i]
 
 		// for each n shares
-		for x := uint(1); x <= n; x++ {
-			temp := maths.EvaluatePolynomial(randomPolynomial, x)
-			values[x-1][i] = byte(temp)
+		for x := uint(0); x < n; x++ {
+			yValue := maths.EvaluatePolynomial(randomPolynomial, x)
+			shareBuffers[x][i] = byte(yValue)
 		}
 	}
 
-	xValues := make([]uint, n)
-	yValues := make([][]byte, n)
-	for i := 0; i < int(n); i++ {
-		xValues[i] = uint(i) + 1
-		yValues[i] = values[i]
-	}
+	xValues := uRange(n)
+	yValues := shareBuffers
 	return xValues, yValues
+}
+
+func uRange(maxExclusive uint) []uint {
+	data := make([]uint, maxExclusive)
+	for i := range data {
+		data[i] = uint(i)
+	}
+	return data
 }
 
 func recoverSecret(xValues []uint, yValues [][]byte) []byte {
