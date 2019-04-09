@@ -92,22 +92,30 @@ func RecoverShare(share []string) (nonce, index, threshold uint, shamirBytes []b
 	return uint(nonceRaw), uint(indexRaw), uint(thresholdRaw), shamirBytes
 }
 
-func createShamirData(n, k uint, secret []byte) ([]uint, [][]byte) {
-	if n < k {
+func createShamirData(n, threshold uint, secret []byte) ([]uint, [][]byte) {
+	if n < threshold {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
-	checksum := make([]byte, 32)
-	_ = checksum
-	secretLen := len(secret)
+
+	checksum := cryptos.GetRandomBytes(len(secret))
+	basePoints := make([]maths.Point, threshold)
+	basePoints[0] = maths.Point{X: 254, Y: checksum}
+	basePoints[1] = maths.Point{X: 255, Y: secret}
+	shares := make([]maths.Point, n)
+
+	for i := range shares {
+		shares[i] = maths.Point{X: uint(i), Y: maths.LagrangeInterpolateNew(uint(i), basePoints)}
+	}
+
 	shareBuffers := make([][]byte, n)
 	for i := range shareBuffers {
-		shareBuffers[i] = make([]byte, secretLen)
+		shareBuffers[i] = make([]byte, len(secret))
 	}
 
 	// for each byte in the secret
-	for i := 0; i < secretLen; i++ {
-		randomPolynomial := maths.CreateRandomPolynomial(k - 1)
-		randomPolynomial = append(randomPolynomial, (make([]byte, 256-k))...)
+	for i := 0; i < len(secret); i++ {
+		randomPolynomial := maths.CreateRandomPolynomial(threshold - 1)
+		randomPolynomial = append(randomPolynomial, (make([]byte, 256-threshold))...)
 		randomPolynomial[254] = 255 // todo: checksum
 		randomPolynomial[255] = secret[i]
 

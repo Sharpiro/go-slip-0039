@@ -7,6 +7,12 @@ import (
 	gfArith "go-slip-0039/maths/gflogmaths"
 )
 
+// Point represents a point on a polynomial
+type Point struct {
+	X uint
+	Y []byte
+}
+
 // LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
 func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 	var y uint
@@ -26,6 +32,30 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 		y = gfArith.Add(y, l)
 	}
 	return y
+}
+
+// LagrangeInterpolateNew is used to rebuild the original polynomial, and thus the secret
+func LagrangeInterpolateNew(xInput uint, points []Point) []byte {
+	var y uint
+	for i := 0; i < len(points); i++ {
+		var li uint = 1
+		yi := points[i].Y
+		_ = yi
+		for j := 0; j < len(points); j++ {
+			if i == j {
+				continue
+			}
+			numerator := gfArith.Subtract(xInput, points[j].X)        // can probably remove xinput subtraction
+			denominator := gfArith.Subtract(points[i].X, points[j].X) // these 2 values can be probably be swapped w/o issue
+			newLi := gfArith.Divide(numerator, denominator)
+			li = gfArith.Multiply(li, newLi)
+		}
+		// l := gfArith.Multiply(li, yi)
+		l := uint(0) // todo: figure out how to multiply by buffer
+		y = gfArith.Add(y, l)
+	}
+	// return y
+	return []byte{}
 }
 
 // CreateRandomPolynomial creates a random polynomial of the given degree

@@ -9,7 +9,7 @@ func GetRandomBytes(length int) []byte {
 	return buffer
 }
 
-// // GetRandomBytes gets random buffer of specified length
+// // GetRandomBytes gets fake buffer sequence of specified length
 // func GetRandomBytes(length int) []byte {
 // 	buffer := make([]byte, length)
 // 	for i := 0; i < length; i++ {

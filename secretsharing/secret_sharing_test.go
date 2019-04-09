@@ -17,7 +17,7 @@ var _tester *testing.T
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	// secretBytes := []byte{9, 8, 7, 6}
 	secretBytes := []byte{9}
-	wordLists := CreateMnemonicWordsList(5, 3, secretBytes, "")
+	wordLists := CreateMnemonicWordsList(5, 2, secretBytes, "")
 
 	if wordLists[0][0] != "angry" {
 		tester.Error()
