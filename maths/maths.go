@@ -36,11 +36,9 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 
 // LagrangeInterpolateNew is used to rebuild the original polynomial, and thus the secret
 func LagrangeInterpolateNew(xInput uint, points []Point) []byte {
-	var y uint
+	y := make([]byte, len(points[0].Y))
 	for i := 0; i < len(points); i++ {
 		var li uint = 1
-		yi := points[i].Y
-		_ = yi
 		for j := 0; j < len(points); j++ {
 			if i == j {
 				continue
@@ -50,12 +48,10 @@ func LagrangeInterpolateNew(xInput uint, points []Point) []byte {
 			newLi := gfArith.Divide(numerator, denominator)
 			li = gfArith.Multiply(li, newLi)
 		}
-		// l := gfArith.Multiply(li, yi)
-		l := uint(0) // todo: figure out how to multiply by buffer
-		y = gfArith.Add(y, l)
+		l := gfArith.MultiplyX(li, points[i].Y)
+		y = gfArith.AddX(y, l)
 	}
-	// return y
-	return []byte{}
+	return y
 }
 
 // CreateRandomPolynomial creates a random polynomial of the given degree

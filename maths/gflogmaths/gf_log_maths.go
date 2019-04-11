@@ -10,6 +10,15 @@ func Add(a, b uint) uint {
 	return a ^ b
 }
 
+// AddX 2 items
+func AddX(a, b []byte) []byte {
+	temp := make([]byte, len(b))
+	for i := 0; i < len(b); i++ {
+		temp[i] = a[i] ^ b[i]
+	}
+	return temp
+}
+
 // Subtract 2 items
 func Subtract(a, b uint) uint {
 	return a ^ b
@@ -24,6 +33,22 @@ func Multiply(a, b uint) uint {
 	logB := log[b]
 	exp := exp[logA+logB]
 	return exp
+}
+
+// MultiplyX 2 numbers reduced by a polynomial
+func MultiplyX(a uint, b []byte) []byte {
+	if a == 0 {
+		return []byte{}
+	}
+
+	temp := make([]byte, len(b))
+	for i := 0; i < len(b); i++ {
+		temp[i] = byte(Multiply(a, uint(b[i])))
+	}
+	// logA := log[a]
+	// logB := log[b]
+	// exp := exp[logA+logB]
+	return temp
 }
 
 // Inverse gets the inverse of a number given a polynomial
