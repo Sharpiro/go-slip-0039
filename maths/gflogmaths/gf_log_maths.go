@@ -10,17 +10,27 @@ func Add(a, b uint) uint {
 	return a ^ b
 }
 
-// AddX 2 items
-func AddX(a, b []byte) []byte {
-	temp := make([]byte, len(b))
+// AddByte adds 2 byes
+func AddByte(a, b byte) byte {
+	return a ^ b
+}
+
+// AddBuffers a number and a buffer
+func AddBuffers(a, b []byte) []byte {
+	newBuffer := make([]byte, len(b))
 	for i := 0; i < len(b); i++ {
-		temp[i] = a[i] ^ b[i]
+		newBuffer[i] = AddByte(a[i], b[i])
 	}
-	return temp
+	return newBuffer
 }
 
 // Subtract 2 items
 func Subtract(a, b uint) uint {
+	return a ^ b
+}
+
+// SubtractByte 2 items
+func SubtractByte(a, b byte) byte {
 	return a ^ b
 }
 
@@ -35,20 +45,24 @@ func Multiply(a, b uint) uint {
 	return exp
 }
 
-// MultiplyX 2 numbers reduced by a polynomial
-func MultiplyX(a uint, b []byte) []byte {
-	if a == 0 {
-		return []byte{}
+// MultiplyByte 2 numbers reduced by a polynomial
+func MultiplyByte(a, b byte) byte {
+	if a == 0 || b == 0 {
+		return 0
 	}
+	logA := log[a]
+	logB := log[b]
+	exp := byte(exp[logA+logB])
+	return exp
+}
 
-	temp := make([]byte, len(b))
+// MultiplyBuffer multiplies a number by a buffer reduced by a polynomial
+func MultiplyBuffer(a byte, b []byte) []byte {
+	newBuffer := make([]byte, len(b))
 	for i := 0; i < len(b); i++ {
-		temp[i] = byte(Multiply(a, uint(b[i])))
+		newBuffer[i] = MultiplyByte(a, b[i])
 	}
-	// logA := log[a]
-	// logB := log[b]
-	// exp := exp[logA+logB]
-	return temp
+	return newBuffer
 }
 
 // Inverse gets the inverse of a number given a polynomial
@@ -59,10 +73,24 @@ func Inverse(x uint) uint {
 	return exp[255-log[x]]
 }
 
+// InverseByte gets the inverse of a number given a polynomial
+func InverseByte(x byte) byte {
+	if x == 0 {
+		return 0
+	}
+	return byte(exp[255-log[x]])
+}
+
 // Divide performs a * 1/b
 func Divide(a, b uint) uint {
 	inverseB := Inverse(b)
 	return Multiply(a, inverseB)
+}
+
+// DivideByte performs a * 1/b
+func DivideByte(a, b byte) byte {
+	inverseB := InverseByte(b)
+	return MultiplyByte(a, inverseB)
 }
 
 func newField(a uint) (exp, log []uint) {

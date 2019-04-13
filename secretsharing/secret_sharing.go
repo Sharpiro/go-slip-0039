@@ -104,7 +104,7 @@ func createShamirData(n, threshold uint, secret []byte) ([]uint, [][]byte) {
 	shares := make([]maths.Point, n)
 
 	for i := range shares {
-		shares[i] = maths.Point{X: uint(i), Y: maths.LagrangeInterpolateNew(uint(i), basePoints)}
+		shares[i] = maths.Point{X: byte(i), Y: maths.LagrangeInterpolate(byte(i), basePoints)}
 	}
 
 	shareBuffers := make([][]byte, n)
@@ -156,7 +156,7 @@ func recoverSecret(xValues []uint, yValues [][]byte) []byte {
 			subXValues[j] = xValues[j]
 			subYValues[j] = uint(yValues[j][i])
 		}
-		interpolation := maths.LagrangeInterpolate(0, subXValues, subYValues)
+		interpolation := maths.LagrangeInterpolateOld(0, subXValues, subYValues)
 		checksummedSecret[i] = byte(interpolation)
 	}
 	return checksummedSecret

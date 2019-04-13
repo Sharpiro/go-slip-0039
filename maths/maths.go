@@ -9,12 +9,12 @@ import (
 
 // Point represents a point on a polynomial
 type Point struct {
-	X uint
+	X byte
 	Y []byte
 }
 
-// LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
-func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
+// LagrangeInterpolateOld is used to rebuild the original polynomial, and thus the secret
+func LagrangeInterpolateOld(xInput uint, xValues []uint, yValues []uint) uint {
 	var y uint
 	for i := 0; i < len(xValues); i++ {
 		var li uint = 1
@@ -34,22 +34,22 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 	return y
 }
 
-// LagrangeInterpolateNew is used to rebuild the original polynomial, and thus the secret
-func LagrangeInterpolateNew(xInput uint, points []Point) []byte {
+// LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
+func LagrangeInterpolate(xInput byte, points []Point) []byte {
 	y := make([]byte, len(points[0].Y))
 	for i := 0; i < len(points); i++ {
-		var li uint = 1
+		var li byte = 1
 		for j := 0; j < len(points); j++ {
 			if i == j {
 				continue
 			}
-			numerator := gfArith.Subtract(xInput, points[j].X)        // can probably remove xinput subtraction
-			denominator := gfArith.Subtract(points[i].X, points[j].X) // these 2 values can be probably be swapped w/o issue
-			newLi := gfArith.Divide(numerator, denominator)
-			li = gfArith.Multiply(li, newLi)
+			numerator := gfArith.SubtractByte(xInput, points[j].X)
+			denominator := gfArith.SubtractByte(points[i].X, points[j].X)
+			newLi := gfArith.DivideByte(numerator, denominator)
+			li = gfArith.MultiplyByte(byte(li), byte(newLi))
 		}
-		l := gfArith.MultiplyX(li, points[i].Y)
-		y = gfArith.AddX(y, l)
+		l := gfArith.MultiplyBuffer(li, points[i].Y)
+		y = gfArith.AddBuffers(y, l)
 	}
 	return y
 }

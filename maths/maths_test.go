@@ -9,15 +9,15 @@ import (
 )
 
 func TestLagrangeInterpolateNew(tester *testing.T) {
-	xInput := uint(1)
+	var xInput byte = 1
 	points := []Point{
 		Point{X: 0, Y: []byte{230, 163, 161, 72, 7, 200, 177, 202, 45, 3, 226, 89, 184, 109, 151, 15}},
-		Point{X: 0, Y: []byte{113, 103, 248, 79, 228, 213, 132, 41, 200, 0, 220, 174, 220, 67, 30, 226}},
-		Point{X: 0, Y: []byte{248, 138, 218, 228, 36, 53, 166, 246, 55, 69, 55, 115, 40, 139, 2, 202}},
+		Point{X: 254, Y: []byte{113, 103, 248, 79, 228, 213, 132, 41, 200, 0, 220, 174, 220, 67, 30, 226}},
+		Point{X: 255, Y: []byte{248, 138, 218, 228, 36, 53, 166, 246, 55, 69, 55, 115, 40, 139, 2, 202}},
 	}
 	expected := []byte{111, 78, 131, 227, 199, 40, 147, 21, 210, 70, 9, 132, 76, 165, 139, 39}
 
-	result := LagrangeInterpolateNew(xInput, points)
+	result := LagrangeInterpolate(xInput, points)
 	if !bytes.Equal(expected, result) {
 		tester.Error(result)
 	}
@@ -75,7 +75,7 @@ func TestLagrangeInterpolate(tester *testing.T) {
 	yValues := []uint{31, 68, 230, 250, 88, 3}
 	var expected uint = 189
 
-	actual := LagrangeInterpolate(0, xValues, yValues)
+	actual := LagrangeInterpolateOld(0, xValues, yValues)
 	if expected != actual {
 		tester.Errorf("expected %v but was %v", expected, actual)
 	}
