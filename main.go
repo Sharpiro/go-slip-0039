@@ -85,7 +85,7 @@ func create(context *cli.Context) {
 	if err != nil {
 		log.Fatal("an error occurred decoding the hex string to bytes")
 	}
-	shares := secretsharing.CreateMnemonicWordsList(uint(n), uint(k), secretBytes, "")
+	shares := secretsharing.CreateMnemonicWordsList(byte(n), byte(k), secretBytes, "")
 	replacer := strings.NewReplacer("[", "", "]", "")
 	for _, share := range shares {
 		formattedShare := replacer.Replace(fmt.Sprint(share))
