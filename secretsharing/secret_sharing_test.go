@@ -14,6 +14,11 @@ import (
 
 var _tester *testing.T
 
+func TestCreateIndexList(tester *testing.T) {
+	indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, make([]byte, 32))
+	_ = indexList
+}
+
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
 	// secretBytes := []byte{9, 8, 7, 6}
 	secretBytes := []byte{9}
@@ -55,17 +60,17 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 	}
 }
 
-func TestMakeShare(tester *testing.T) {
-	shamirPart := []byte{11, 10, 5, 4, 97, 219}
-	expectedShare := []byte{8, 130, 194, 129, 65, 24, 118, 192}
-	actualShare := createUnchecksummedShare(shamirPart, 1, 2)
-	if !bytes.Equal(expectedShare, actualShare.Buffer) {
-		tester.Error()
-	}
-	if actualShare.Size != 58 {
-		tester.Error()
-	}
-}
+// func TestMakeShare(tester *testing.T) {
+// 	shamirPart := []byte{11, 10, 5, 4, 97, 219}
+// 	expectedShare := []byte{8, 130, 194, 129, 65, 24, 118, 192}
+// 	actualShare := createUnchecksummedShare(shamirPart, 1, 2)
+// 	if !bytes.Equal(expectedShare, actualShare.Buffer) {
+// 		tester.Error()
+// 	}
+// 	if actualShare.Size != 58 {
+// 		tester.Error()
+// 	}
+// }
 
 func TestGetChecksummedShare(tester *testing.T) {
 	share := bits.SmartBufferFromBytes([]byte{0, 66, 194, 129, 65, 24, 118, 192}, 58)

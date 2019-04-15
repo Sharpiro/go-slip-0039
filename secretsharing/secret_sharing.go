@@ -8,6 +8,7 @@ import (
 	"go-slip-0039/wordencoding"
 	"log"
 	"strconv"
+	"strings"
 )
 
 // CreateMnemonicWordsList creates shares based off a given secret
@@ -21,11 +22,32 @@ func CreateMnemonicWordsList(shareCount, threshold byte, secret []byte, passphra
 	for i := 0; i < len(shares); i++ {
 		// unchecksummedShare := createUnchecksummedShare(threshold, shares[i])
 		// checksummedShare := unchecksummedShare.GetChecksummedBuffer()
-		indexList := wordencoding.CreateIndexList(checksummedShare)
+		indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, shares[i].Y)
+		_ = indexList
 		// mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
 		// mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
 	}
 	return mnemonicWordsList
+}
+
+func createIndexList(id, iterationExponent, groupIndex, groupThreshold, groupCount, memberIndex, memberThreshold int,
+	share []byte) []uint {
+	temp1 := bits.GetBits(byte(id), 15)
+	temp2 := bits.GetBits(byte(iterationExponent), 5)
+	temp3 := bits.GetBits(byte(groupIndex), 4)
+	temp4 := bits.GetBits(byte(groupThreshold-1), 4)
+	temp5 := bits.GetBits(byte(groupCount-1), 4)
+	temp6 := bits.GetBits(byte(memberIndex), 4)
+	temp7 := bits.GetBits(byte(memberThreshold-1), 4)
+	temp8 := bits.GetBitsArray(share, 8)
+	paddedShareSize := len(temp8) + (10 - (len(temp8) % 10))
+	paddingSize := paddedShareSize - len(temp8)
+	padding := strings.Repeat("0", paddingSize)
+	temp9 := padding + temp8
+	checksum := strings.Repeat("0", 30)
+	concat := temp1 + temp2 + temp3 + temp4 + temp5 + temp6 + temp7 + temp9 + checksum
+	_ = concat
+	return []uint{}
 }
 
 // RecoverSecretFromMnemonicShares recovers a secret based off of K supplied word lists

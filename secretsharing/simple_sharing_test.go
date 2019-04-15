@@ -1,7 +1,6 @@
 package secretsharing
 
 import (
-	"bytes"
 	"go-slip-0039/maths/bits"
 	"go-slip-0039/wordencoding"
 	"reflect"
@@ -9,30 +8,30 @@ import (
 	"testing"
 )
 
-func TestCreateChecksummedShare(tester *testing.T) {
-	shamirPart := []byte{255}
-	unchecksummedShare := createUnchecksummedShare(shamirPart, 1, 2)
-	checksummedShare := unchecksummedShare.GetChecksummedBuffer()
-	rebuiltUnchecksummedShare := checksummedShare.GetUnchecksummedBuffer()
+// func TestCreateChecksummedShare(tester *testing.T) {
+// 	shamirPart := []byte{255}
+// 	unchecksummedShare := createUnchecksummedShare(shamirPart, 1, 2)
+// 	checksummedShare := unchecksummedShare.GetChecksummedBuffer()
+// 	rebuiltUnchecksummedShare := checksummedShare.GetUnchecksummedBuffer()
 
-	if !bytes.Equal(unchecksummedShare.Buffer, rebuiltUnchecksummedShare.Buffer) {
-		tester.Error()
-	}
-	if checksummedShare.Size != 70 || len(checksummedShare.Buffer) != 9 {
-		tester.Error()
-	}
-}
+// 	if !bytes.Equal(unchecksummedShare.Buffer, rebuiltUnchecksummedShare.Buffer) {
+// 		tester.Error()
+// 	}
+// 	if checksummedShare.Size != 70 || len(checksummedShare.Buffer) != 9 {
+// 		tester.Error()
+// 	}
+// }
 
-func TestCreateIndexList(tester *testing.T) {
-	checksummedShare := []byte{1, 2, 0, 139, 252, 124, 213, 134, 144}
-	smartBuffer := bits.SmartBufferFromBytes(checksummedShare, 70)
-	expectedIndexList := []uint{0, 0, 34, 1020, 499, 344, 420}
-	actualIndexList := wordencoding.CreateIndexList(smartBuffer)
+// func TestCreateIndexList(tester *testing.T) {
+// 	checksummedShare := []byte{1, 2, 0, 139, 252, 124, 213, 134, 144}
+// 	smartBuffer := bits.SmartBufferFromBytes(checksummedShare, 70)
+// 	expectedIndexList := []uint{0, 0, 34, 1020, 499, 344, 420}
+// 	actualIndexList := wordencoding.CreateIndexList(smartBuffer)
 
-	if !reflect.DeepEqual(expectedIndexList[2:], actualIndexList[2:]) {
-		tester.Error()
-	}
-}
+// 	if !reflect.DeepEqual(expectedIndexList[2:], actualIndexList[2:]) {
+// 		tester.Error()
+// 	}
+// }
 
 func TestCreateMnemonicWords(tester *testing.T) {
 	indexList := []uint{4, 32, 34, 1020, 499, 344, 420}
