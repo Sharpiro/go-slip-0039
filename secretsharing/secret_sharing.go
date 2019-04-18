@@ -13,41 +13,50 @@ import (
 
 // CreateMnemonicWordsList creates shares based off a given secret
 func CreateMnemonicWordsList(shareCount, threshold byte, secret []byte, passphrase string) [][]string {
-	// sharedIdentifierBits := bits.GetBitsArray(cryptos.GetRandomBytes(4), 8)[:30]
-	// encryptionKey := getEncryptionKey(passphrase, sharedIdentifierBits, threshold)
 	shares := splitSecret(threshold, shareCount, secret)
 	_ = shares
-
+	id := cryptos.GetRandomBelow(12)
 	var mnemonicWordsList [][]string
-	for i := 0; i < len(shares); i++ {
-		// unchecksummedShare := createUnchecksummedShare(threshold, shares[i])
-		// checksummedShare := unchecksummedShare.GetChecksummedBuffer()
-		indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, shares[i].Y)
-		_ = indexList
-		// mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
-		// mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
+	for _, share := range shares {
+		indexList := createIndexList(id, 0, 0, 1, 1, share.X, threshold, share.Y)
+		mnemonicWords := wordencoding.CreateMnemonicWords(indexList)
+		mnemonicWordsList = append(mnemonicWordsList, mnemonicWords)
 	}
 	return mnemonicWordsList
 }
 
-func createIndexList(id, iterationExponent, groupIndex, groupThreshold, groupCount, memberIndex, memberThreshold int,
-	share []byte) []uint {
-	temp1 := bits.GetBits(byte(id), 15)
-	temp2 := bits.GetBits(byte(iterationExponent), 5)
-	temp3 := bits.GetBits(byte(groupIndex), 4)
-	temp4 := bits.GetBits(byte(groupThreshold-1), 4)
-	temp5 := bits.GetBits(byte(groupCount-1), 4)
-	temp6 := bits.GetBits(byte(memberIndex), 4)
-	temp7 := bits.GetBits(byte(memberThreshold-1), 4)
-	temp8 := bits.GetBitsArray(share, 8)
-	paddedShareSize := len(temp8) + (10 - (len(temp8) % 10))
-	paddingSize := paddedShareSize - len(temp8)
+func createIndexList(id int, iterationExponent, groupIndex, groupThreshold, groupCount, memberIndex,
+	memberThreshold byte, shareValue []byte) []int {
+	idBits := bits.GetBits(byte(id), 15)
+	iterationExponentBits := bits.GetBits(byte(iterationExponent), 5)
+	groupIndexBits := bits.GetBits(byte(groupIndex), 4)
+	groupThresholdBits := bits.GetBits(byte(groupThreshold-1), 4)
+	groupCountBits := bits.GetBits(byte(groupCount-1), 4)
+	memberIndexBits := bits.GetBits(byte(memberIndex), 4)
+	memberThresholdBits := bits.GetBits(byte(memberThreshold-1), 4)
+	shareValueBits := bits.GetBitsArray(shareValue, 8)
+	paddedShareSize := len(shareValueBits) + (10 - (len(shareValueBits) % 10))
+	paddingSize := paddedShareSize - len(shareValueBits)
 	padding := strings.Repeat("0", paddingSize)
-	temp9 := padding + temp8
-	checksum := strings.Repeat("0", 30)
-	concat := temp1 + temp2 + temp3 + temp4 + temp5 + temp6 + temp7 + temp9 + checksum
-	_ = concat
-	return []uint{}
+	paddedShareValueBits := padding + shareValueBits
+	// checksum := strings.Repeat("0", 30)
+	shareBits := idBits + iterationExponentBits + groupIndexBits + groupThresholdBits + groupCountBits +
+		memberIndexBits + memberThresholdBits + paddedShareValueBits
+
+	// var groups []uint
+	indexes := make([]int, 0, 17)
+	for i := 0; i < len(shareBits); i += 10 {
+		indexBits := shareBits[i : i+10]
+		index, err := strconv.ParseInt(indexBits, 2, 15)
+		if err != nil {
+			log.Fatal("failed converting bits to bytes")
+		}
+		indexes = append(indexes, int(index))
+	}
+
+	checksum := cryptos.RS1024CreateChecksum(indexes)
+	indexes = append(indexes, checksum...)
+	return indexes
 }
 
 // RecoverSecretFromMnemonicShares recovers a secret based off of K supplied word lists
@@ -93,7 +102,8 @@ func RecoverShare(share []string) (nonce, index, threshold uint, shamirBytes []b
 		log.Fatalf("invalid share, minimum share size is 7 words, actual was %v", len(share))
 	}
 
-	mnemonicIndexes := wordencoding.RecoverIndexList(share)
+	// mnemonicIndexes := wordencoding.RecoverIndexList(share)
+	mnemonicIndexes := make([]uint, 0)
 	checksummedBuffer := wordencoding.RecoverChecksummedBuffer(mnemonicIndexes)
 	unchecksummedBuffer := checksummedBuffer.GetUnchecksummedBuffer()
 	unchecksummedBits := unchecksummedBuffer.GetBits()

@@ -15,7 +15,7 @@ import (
 var _tester *testing.T
 
 func TestCreateIndexList(tester *testing.T) {
-	indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, make([]byte, 32))
+	indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, make([]byte, 16))
 	_ = indexList
 }
 

@@ -20,7 +20,7 @@ func CreateIndexList(checksummedBuffer *bits.SmartBuffer) []uint {
 	return indexList
 }
 
-func CreateMnemonicWords(mnemonicIndexes []uint) []string {
+func CreateMnemonicWords(mnemonicIndexes []int) []string {
 	words := make([]string, len(mnemonicIndexes))
 	for i, v := range mnemonicIndexes {
 		if v&1024 != 0 {
@@ -40,8 +40,12 @@ func RecoverChecksummedBuffer(indexList []uint) *bits.SmartBuffer {
 	return smartBuffer
 }
 
-func RecoverIndexList(words []string) []uint {
-	indexes := make([]uint, len(words))
+func RecoverIndexList(words []string) []int {
+	wordMap := make(map[string]int)
+	// for i, v := range wordList {
+
+	// }
+	indexes := make([]int, len(words))
 	for i, v := range words {
 		if val, exists := wordMap[v]; exists {
 			indexes[i] = val
