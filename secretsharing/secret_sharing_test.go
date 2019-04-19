@@ -14,9 +14,13 @@ import (
 
 var _tester *testing.T
 
+func TestCreateIndexList(tester *testing.T) {
+	indexList := createIndexList(99, 0, 0, 1, 1, 0, 3, make([]byte, 16))
+	_ = indexList
+}
+
 func TestShareIndexAndThresholdSimple(tester *testing.T) {
-	// secretBytes := []byte{9, 8, 7, 6}
-	secretBytes := []byte{9}
+	secretBytes, _ := hex.DecodeString("e884e0a102941a13a299096cbbe4e0ee")
 	wordLists := CreateMnemonicWordsList(3, 2, secretBytes, "")
 
 	if wordLists[0][0] != "angry" {
@@ -51,18 +55,6 @@ func TestShareIndexAndThreshold(tester *testing.T) {
 		tester.Error()
 	}
 	if wordLists[5][0] != "crunch" {
-		tester.Error()
-	}
-}
-
-func TestMakeShare(tester *testing.T) {
-	shamirPart := []byte{11, 10, 5, 4, 97, 219}
-	expectedShare := []byte{8, 130, 194, 129, 65, 24, 118, 192}
-	actualShare := createUnchecksummedShare(shamirPart, 1, 2)
-	if !bytes.Equal(expectedShare, actualShare.Buffer) {
-		tester.Error()
-	}
-	if actualShare.Size != 58 {
 		tester.Error()
 	}
 }

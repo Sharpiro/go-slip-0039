@@ -10,8 +10,27 @@ func Add(a, b uint) uint {
 	return a ^ b
 }
 
+// AddByte adds 2 byes
+func AddByte(a, b byte) byte {
+	return a ^ b
+}
+
+// AddBuffers a number and a buffer
+func AddBuffers(a, b []byte) []byte {
+	newBuffer := make([]byte, len(b))
+	for i := 0; i < len(b); i++ {
+		newBuffer[i] = AddByte(a[i], b[i])
+	}
+	return newBuffer
+}
+
 // Subtract 2 items
 func Subtract(a, b uint) uint {
+	return a ^ b
+}
+
+// SubtractByte 2 items
+func SubtractByte(a, b byte) byte {
 	return a ^ b
 }
 
@@ -26,6 +45,26 @@ func Multiply(a, b uint) uint {
 	return exp
 }
 
+// MultiplyByte 2 numbers reduced by a polynomial
+func MultiplyByte(a, b byte) byte {
+	if a == 0 || b == 0 {
+		return 0
+	}
+	logA := log[a]
+	logB := log[b]
+	exp := byte(exp[logA+logB])
+	return exp
+}
+
+// MultiplyBuffer multiplies a number by a buffer reduced by a polynomial
+func MultiplyBuffer(a byte, b []byte) []byte {
+	newBuffer := make([]byte, len(b))
+	for i := 0; i < len(b); i++ {
+		newBuffer[i] = MultiplyByte(a, b[i])
+	}
+	return newBuffer
+}
+
 // Inverse gets the inverse of a number given a polynomial
 func Inverse(x uint) uint {
 	if x == 0 {
@@ -34,10 +73,24 @@ func Inverse(x uint) uint {
 	return exp[255-log[x]]
 }
 
+// InverseByte gets the inverse of a number given a polynomial
+func InverseByte(x byte) byte {
+	if x == 0 {
+		return 0
+	}
+	return byte(exp[255-log[x]])
+}
+
 // Divide performs a * 1/b
 func Divide(a, b uint) uint {
 	inverseB := Inverse(b)
 	return Multiply(a, inverseB)
+}
+
+// DivideByte performs a * 1/b
+func DivideByte(a, b byte) byte {
+	inverseB := InverseByte(b)
+	return MultiplyByte(a, inverseB)
 }
 
 func newField(a uint) (exp, log []uint) {

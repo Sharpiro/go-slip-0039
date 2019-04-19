@@ -7,8 +7,14 @@ import (
 	gfArith "go-slip-0039/maths/gflogmaths"
 )
 
-// LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
-func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
+// Point represents a point on a polynomial
+type Point struct {
+	X byte
+	Y []byte
+}
+
+// LagrangeInterpolateOld is used to rebuild the original polynomial, and thus the secret
+func LagrangeInterpolateOld(xInput uint, xValues []uint, yValues []uint) uint {
 	var y uint
 	for i := 0; i < len(xValues); i++ {
 		var li uint = 1
@@ -24,6 +30,26 @@ func LagrangeInterpolate(xInput uint, xValues []uint, yValues []uint) uint {
 		}
 		l := gfArith.Multiply(li, yi)
 		y = gfArith.Add(y, l)
+	}
+	return y
+}
+
+// LagrangeInterpolate is used to rebuild the original polynomial, and thus the secret
+func LagrangeInterpolate(xInput byte, points []Point) []byte {
+	y := make([]byte, len(points[0].Y))
+	for i := 0; i < len(points); i++ {
+		var li byte = 1
+		for j := 0; j < len(points); j++ {
+			if i == j {
+				continue
+			}
+			numerator := gfArith.SubtractByte(xInput, points[j].X)
+			denominator := gfArith.SubtractByte(points[i].X, points[j].X)
+			newLi := gfArith.DivideByte(numerator, denominator)
+			li = gfArith.MultiplyByte(byte(li), byte(newLi))
+		}
+		l := gfArith.MultiplyBuffer(li, points[i].Y)
+		y = gfArith.AddBuffers(y, l)
 	}
 	return y
 }
