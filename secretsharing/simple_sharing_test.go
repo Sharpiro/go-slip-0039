@@ -34,7 +34,7 @@ import (
 // }
 
 func TestCreateMnemonicWords(tester *testing.T) {
-	indexList := []uint{4, 32, 34, 1020, 499, 344, 420}
+	indexList := []int{4, 32, 34, 1020, 499, 344, 420}
 	expectedMnemonicWords := []string{"", "", "angry", "write", "laundry", "fatal", "half"}
 	actualMnemonicWords := wordencoding.CreateMnemonicWords(indexList)
 

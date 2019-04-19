@@ -7,6 +7,7 @@ import (
 	"go-slip-0039/maths/bits"
 	"go-slip-0039/wordencoding"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -15,7 +16,7 @@ import (
 func CreateMnemonicWordsList(shareCount, threshold byte, secret []byte, passphrase string) [][]string {
 	shares := splitSecret(threshold, shareCount, secret)
 	_ = shares
-	id := cryptos.GetRandomBelow(12)
+	id := cryptos.GetRandomBelow((int(math.Pow(2, 15))) - 1)
 	var mnemonicWordsList [][]string
 	for _, share := range shares {
 		indexList := createIndexList(id, 0, 0, 1, 1, share.X, threshold, share.Y)
@@ -39,7 +40,6 @@ func createIndexList(id int, iterationExponent, groupIndex, groupThreshold, grou
 	paddingSize := paddedShareSize - len(shareValueBits)
 	padding := strings.Repeat("0", paddingSize)
 	paddedShareValueBits := padding + shareValueBits
-	// checksum := strings.Repeat("0", 30)
 	shareBits := idBits + iterationExponentBits + groupIndexBits + groupThresholdBits + groupCountBits +
 		memberIndexBits + memberThresholdBits + paddedShareValueBits
 
@@ -130,9 +130,9 @@ func splitSecret(threshold, shareCount byte, secret []byte) []maths.Point {
 		log.Fatalf("n must be greater than k, secret would be unrecoverable")
 	}
 
-	checksum := cryptos.GetRandomBytes(len(secret))
+	digest := createDigest(secret)
 	basePoints := make([]maths.Point, threshold)
-	basePoints[0] = maths.Point{X: 254, Y: checksum}
+	basePoints[0] = maths.Point{X: 254, Y: digest}
 	basePoints[1] = maths.Point{X: 255, Y: secret}
 	shares := make([]maths.Point, shareCount)
 
@@ -143,12 +143,11 @@ func splitSecret(threshold, shareCount byte, secret []byte) []maths.Point {
 	return shares
 }
 
-func uRange(maxExclusive uint) []uint {
-	data := make([]uint, maxExclusive)
-	for i := range data {
-		data[i] = uint(i)
-	}
-	return data
+func createDigest(secret []byte) []byte {
+	randomKey := cryptos.GetRandomBytes(len(secret) - 4)
+	hmac := cryptos.GetHmacSha256(randomKey, secret)[:4]
+	digest := append(hmac, randomKey...)
+	return digest
 }
 
 func recoverSecret(xValues []uint, yValues [][]byte) []byte {
