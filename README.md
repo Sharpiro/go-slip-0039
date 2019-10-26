@@ -1,6 +1,6 @@
 # Go-SLIP-0039
 
-This is an implementation of the [SLIP-0039](https://github.com/satoshilabs/slips/blob/master/slip-0039.md) for Shamir's Secret Sharing.  This repo is a work in progress, and neither the SLIP nor this codebase is certified for use at this time.
+This is an **out-of-date** implementation of SLIP-0039 for Shamir's Secret Sharing.  For up to date implementations see the official [SLIP page](https://github.com/satoshilabs/slips/blob/master/slip-0039.md#reference-implementation).
 
 ## Installation
 
